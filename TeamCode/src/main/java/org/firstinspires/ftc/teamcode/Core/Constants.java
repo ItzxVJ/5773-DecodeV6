@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.core;
+package org.firstinspires.ftc.teamcode.Core;
 
 public class Constants {
     public static double n = 3.1415926;
@@ -7,4 +7,5 @@ public class Constants {
     public static double passIn;
     public static double passOut;
     public static double passRest;
+    public static double hoodPos;
 }
