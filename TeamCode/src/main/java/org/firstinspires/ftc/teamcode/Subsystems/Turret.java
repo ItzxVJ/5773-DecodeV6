@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.impl.MotorEx;
@@ -18,9 +19,7 @@ public class Turret implements Subsystem {
 
     private final MotorEx turret = new MotorEx("turret").floatMode();
 
-    /* ------------------- Constants ------------------- */
-
-    public static double rpt = 0.0029919; // radians per tick
+    public static double rpt = 0.0029919;
 
     // Coarse PID (large error)
     public static double kP = 0.003;
@@ -32,8 +31,6 @@ public class Turret implements Subsystem {
     public static double sD = 0.0001;
 
     public static double pidSwitch = 30; // ticks
-
-    /* ------------------- State ------------------- */
 
     public static double target = 0;
     public static double error = 0;
@@ -87,8 +84,6 @@ public class Turret implements Subsystem {
         lastError = error;
     }
 
-    /* ------------------- Control API ------------------- */
-
     public void setTurretTarget(double ticks) {
         target = ticks;
         integral = 0;
@@ -120,14 +115,6 @@ public class Turret implements Subsystem {
         setYaw(normalizeAngle(angleToTarget - robotPose.getHeading()));
     }
 
-    public void resetTurret() {
-        turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        setTurretTarget(0);
-    }
-
-    /* ------------------- Manual Control ------------------- */
-
     public void manual(double power) {
         manual = true;
         manualPower = power;
@@ -136,8 +123,6 @@ public class Turret implements Subsystem {
     public void automatic() {
         manual = false;
     }
-
-    /* ------------------- Utilities ------------------- */
 
     public boolean isReady() {
         return Math.abs(error) < pidSwitch;
@@ -148,5 +133,18 @@ public class Turret implements Subsystem {
         if (angle <= -Math.PI) angle += Math.PI * 2;
         if (angle > Math.PI) angle -= Math.PI * 2;
         return angle;
+    }
+
+    public Command faceCommand(Pose targetPose, Pose robotPose) {
+        return new LambdaCommand()
+                .setUpdate(() -> face(targetPose, robotPose));
+    }
+
+    public Command resetTurret() {
+        return new InstantCommand(() -> {
+            turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            setTurretTarget(0);
+        });
     }
 }
