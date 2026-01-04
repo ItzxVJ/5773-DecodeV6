@@ -1,8 +1,12 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Core.Constants.targetRPM;
+
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
 
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
@@ -10,28 +14,32 @@ import dev.nextftc.hardware.impl.MotorEx;
 public class Flywheel implements Subsystem {
     public static final Flywheel INSTANCE = new Flywheel();
     private Flywheel() {}
-    FlywheelPIDFControl controller;
     MotorEx shootL, shootR;
-    public double kS, kV, kP, kI, kD;
-    public double targetRPM;
+    ControlSystem controller;
+    public double kP, kI, kD;
 
     @Override
     public void initialize() {
-        controller = new FlywheelPIDFControl(ActiveOpMode.hardwareMap());
         shootL = new MotorEx("shootL");
         shootR = new MotorEx("shootR").reversed();
+
+        controller = ControlSystem.builder()
+                .velPid(kP, kI, kD)
+                .build();
+
+        controller.goal = new KineticState(0);
     }
 
     @Override
     public void periodic() {
-        controller.setPIDF(kS, kV, kP, kI, kD);
-
-        double currentRPM = Math.abs((shootL.getVelocity() + shootR.getVelocity()) / 2);
-        double batteryVoltage = getBatteryVoltage();
-        double power = controller.update(targetRPM, currentRPM, batteryVoltage);
-
-        shootL.setPower(power);
-        shootR.setPower(power);
+        shootL.setPower(controller.calculate(
+                shootL.getCurrentPosition(),
+                shootL.getVelocity()
+        ));
+        shootR.setPower(controller.calculate(
+                shootR.getCurrentPosition(),
+                shootR.getVelocity()
+        ));
     }
 
     public double getBatteryVoltage() {

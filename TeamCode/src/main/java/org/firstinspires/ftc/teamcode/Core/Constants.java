@@ -11,4 +11,6 @@ public class Constants {
     public static double passRest;
     public static double hoodPos;
     public static Pose redGoalPose = new Pose(0,0, Math.toRadians(0));
+    public static double targetRPM;
+    public static double interpolatedTargetRPM;
 }
