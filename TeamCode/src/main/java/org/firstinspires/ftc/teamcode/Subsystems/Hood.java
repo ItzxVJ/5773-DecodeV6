@@ -12,6 +12,6 @@ public class Hood implements Subsystem {
 
     @Override
     public void periodic() {
-        hood.setPosition(hoodPos);
+        hood.setPosition(interpolatedHoodPos);
     }
 }

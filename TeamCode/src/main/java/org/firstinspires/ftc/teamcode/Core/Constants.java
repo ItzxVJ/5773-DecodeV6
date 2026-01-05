@@ -9,8 +9,10 @@ public class Constants {
     public static double passIn;
     public static double passOut;
     public static double passRest;
-    public static double hoodPos;
+    public static double interpolatedHoodPos;
     public static Pose redGoalPose = new Pose(0,0, Math.toRadians(0));
+    public static Pose blueGoalPose = new Pose(0,0, Math.toRadians(0));
     public static double targetRPM;
-    public static double interpolatedTargetRPM;
+    public static double interpolatedTargetVel;
+    public static double restVel;
 }

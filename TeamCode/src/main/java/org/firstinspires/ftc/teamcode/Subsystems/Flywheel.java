@@ -1,14 +1,17 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Core.Constants.targetRPM;
+import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 
-import com.qualcomm.robotcore.hardware.VoltageSensor;
-import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+import java.util.function.BooleanSupplier;
 
 import dev.nextftc.control.ControlSystem;
 import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.InstantCommand;
+import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.subsystems.Subsystem;
-import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
 
 public class Flywheel implements Subsystem {
@@ -16,7 +19,9 @@ public class Flywheel implements Subsystem {
     private Flywheel() {}
     MotorEx shootL, shootR;
     ControlSystem controller;
-    public double kP, kI, kD;
+    KineticState generalVel = new KineticState(0, interpolatedTargetVel);
+    public static double kP = 0, kI = 0, kD = 0, kF;
+    public static double threshold = 100;
 
     @Override
     public void initialize() {
@@ -27,26 +32,30 @@ public class Flywheel implements Subsystem {
                 .velPid(kP, kI, kD)
                 .build();
 
-        controller.goal = new KineticState(0);
+        controller.setGoal(generalVel);
     }
 
     @Override
     public void periodic() {
-        shootL.setPower(controller.calculate(
-                shootL.getCurrentPosition(),
-                shootL.getVelocity()
-        ));
-        shootR.setPower(controller.calculate(
-                shootR.getCurrentPosition(),
-                shootR.getVelocity()
-        ));
+        controller.setGoal(generalVel);
+        shootL.setPower(controller.calculate(new KineticState(shootL.getCurrentPosition(), shootL.getVelocity())));
+        shootR.setPower(controller.calculate(new KineticState(shootL.getCurrentPosition(), shootL.getVelocity())));
     }
 
-    public double getBatteryVoltage() {
-        double minVoltage = 14.0;
-        for (VoltageSensor sensor : ActiveOpMode.hardwareMap().getAll(VoltageSensor.class)) {
-            minVoltage = Math.min(minVoltage, sensor.getVoltage());
-        }
-        return minVoltage;
+    public boolean isReady() {
+        return Math.abs(shootL.getVelocity() - interpolatedTargetVel) <= threshold;
     }
+
+    public Command rest() {
+        return new InstantCommand(() -> generalVel = new KineticState(0, restVel));
+    }
+
+    public Command run() {
+        return new InstantCommand(() -> generalVel = new KineticState(0, interpolatedTargetVel));
+    }
+
+    public Command stop() {
+        return new InstantCommand(() -> generalVel = new KineticState(0, 0));
+    }
+
 }
