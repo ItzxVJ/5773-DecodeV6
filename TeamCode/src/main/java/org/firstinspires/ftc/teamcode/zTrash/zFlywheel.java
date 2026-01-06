@@ -14,7 +14,7 @@ public class zFlywheel implements Subsystem {
     private zFlywheel() {}
     MotorEx shootL, shootR;
     ControlSystem controller;
-    KineticState generalVel = new KineticState(0, interpolatedTargetVel);
+    KineticState generalVel = new KineticState(0, interpolatedTargetRPM);
     public static double kP = 0, kI = 0, kD = 0, kF;
     public static double threshold = 100;
 
@@ -42,7 +42,7 @@ public class zFlywheel implements Subsystem {
     }
 
     public Command rest() {
-        return new InstantCommand(() -> generalVel = new KineticState(0, restVel));
+        return new InstantCommand(() -> generalVel = new KineticState(0, restRPM));
     }
 
     public Command run() {
