@@ -7,11 +7,22 @@ import dev.nextftc.hardware.impl.ServoEx;
 
 public class Hood implements Subsystem {
     public static final Hood INSTANCE = new Hood();
-    private Hood() { }
+    private Hood() {}
+
     private final ServoEx hood = new ServoEx("hood");
 
     @Override
     public void periodic() {
-        hood.setPosition(interpolatedHoodPos);
+        double[] result = LUT.lutGet(targetDistance);
+        double desiredPos = result[0];
+
+        if (desiredPos < hoodMinPos) {
+            desiredPos = hoodMinPos;
+        } else if (desiredPos > hoodMaxPos) {
+            desiredPos = hoodMaxPos;
+        }
+
+        interpolatedHoodPos = desiredPos;
+        hood.setPosition(desiredPos);
     }
 }
