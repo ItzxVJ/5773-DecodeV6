@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpMode.Tests;
+package org.firstinspires.ftc.teamcode.OpMode.Tests.Separate;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -10,16 +10,15 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class Gate extends LinearOpMode {
 
     public static double gatePos = 0;
-
+    Servo gate;
     @Override
     public void runOpMode() {
-        Servo gate = hardwareMap.get(Servo.class, "gate");
+        gate = hardwareMap.get(Servo.class, "gate");
 
         waitForStart();
 
         while (opModeIsActive()) {
             gate.setPosition(gatePos);
-
             telemetry.addLine("Gate Servo Test");
             telemetry.addLine("Change 'gatePos' w/ Dashboard");
             telemetry.addData("Current Position", gate.getPosition());

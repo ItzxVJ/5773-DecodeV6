@@ -12,23 +12,28 @@ import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.impl.MotorEx;
 
 @Config
-public class Turret implements Subsystem {
+public class NextTurret implements Subsystem {
 
-    public static final Turret INSTANCE = new Turret();
-    private Turret() {}
+    public static final NextTurret INSTANCE = new NextTurret();
+    private NextTurret() {}
 
     private final MotorEx turret = new MotorEx("turret").floatMode();
 
-    public static double rpt = 0.0029919;
+    public static double rpt = 0.0029919; // radians per tick
+    public static double ticksPerRevolution = (2 * Math.PI) / rpt;
 
-    // Coarse PID (large error)
-    public static double kP = 0.003;
-    public static double kD = 0.000;
+
+    public static double lowThreshold = -500;   // ticks
+    public static double highThreshold = 500;   // ticks
+
+    // Coarse PID
+    public static double kP = 0.01;
+    public static double kD = 0.0;
     public static double kF = 0.0;
 
-    // Fine PID (small error)
-    public static double sP = 0.005;
-    public static double sD = 0.0001;
+    // Fine PID
+    public static double sP = 0.01;
+    public static double sD = 0.0;
 
     public static double pidSwitch = 30; // ticks
 
@@ -41,7 +46,7 @@ public class Turret implements Subsystem {
 
     private double lastError = 0;
     private double lastTime = 0;
-    private double integral = 0;
+
     private final ElapsedTime timer = new ElapsedTime();
 
     @Override
@@ -74,10 +79,13 @@ public class Turret implements Subsystem {
 
         double p = kp * error;
         double d = kd * ((error - lastError) / dt);
-
         double ff = coarse ? Math.signum(error) * kF : 0;
 
         power = p + d + ff;
+
+        if (current >= highThreshold && power > 0) power = 0;
+        if (current <= lowThreshold && power < 0) power = 0;
+
         power = Math.max(-1.0, Math.min(1.0, power));
 
         turret.setPower(power);
@@ -85,9 +93,17 @@ public class Turret implements Subsystem {
     }
 
     public void setTurretTarget(double ticks) {
-        target = ticks;
-        integral = 0;
+        target = enforceLimits(ticks);
         lastError = 0;
+    }
+
+    private double enforceLimits(double targetTicks) {
+        if (targetTicks > highThreshold) {
+            targetTicks -= ticksPerRevolution;
+        } else if (targetTicks < lowThreshold) {
+            targetTicks += ticksPerRevolution;
+        }
+        return targetTicks;
     }
 
     public double getTurret() {
@@ -112,7 +128,7 @@ public class Turret implements Subsystem {
                 targetPose.getY() - robotPose.getY(),
                 targetPose.getX() - robotPose.getX()
         );
-        setYaw(normalizeAngle(angleToTarget - robotPose.getHeading()));
+        setYaw(angleToTarget - robotPose.getHeading());
     }
 
     public void manual(double power) {
@@ -129,11 +145,13 @@ public class Turret implements Subsystem {
     }
 
     public static double normalizeAngle(double angleRadians) {
-        double angle = angleRadians % (Math.PI * 2);
-        if (angle <= -Math.PI) angle += Math.PI * 2;
-        if (angle > Math.PI) angle -= Math.PI * 2;
+        double angle = angleRadians % (2 * Math.PI);
+        if (angle <= -Math.PI) angle += 2 * Math.PI;
+        if (angle > Math.PI) angle -= 2 * Math.PI;
         return angle;
     }
+
+    /* ------------------- Commands ------------------- */
 
     public Command faceCommand(Pose targetPose, Pose robotPose) {
         return new LambdaCommand()

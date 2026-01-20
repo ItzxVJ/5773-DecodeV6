@@ -25,7 +25,4 @@ public class LookUpTable {
     public double[] lutGet(double target) {
         return new double[] {angleLUT.get(target), rpmLUT.get(target)};
     }
-
-
-
 }

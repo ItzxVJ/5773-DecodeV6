@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpMode.Tests;
+package org.firstinspires.ftc.teamcode.OpMode.Tests.Separate;
 
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;

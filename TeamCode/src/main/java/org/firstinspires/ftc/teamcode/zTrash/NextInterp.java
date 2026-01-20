@@ -1,15 +1,14 @@
-package org.firstinspires.ftc.teamcode.Subsystems;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.LookUpTable;
 
 import dev.nextftc.core.subsystems.Subsystem;
-import dev.nextftc.hardware.impl.ServoEx;
 
-public class Interp implements Subsystem {
-    public static final Interp INSTANCE = new Interp();
-    private Interp() { }
+public class NextInterp implements Subsystem {
+    public static final NextInterp INSTANCE = new NextInterp();
+    private NextInterp() { }
 
     @Override
     public void initialize() {

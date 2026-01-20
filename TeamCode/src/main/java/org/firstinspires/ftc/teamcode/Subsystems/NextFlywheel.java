@@ -2,40 +2,37 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
-import org.firstinspires.ftc.teamcode.OpMode.Helpers.LookUpTable;
 
-import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.hardware.impl.MotorEx;
-
-public class Flywheel implements Subsystem {
-    public static final Flywheel INSTANCE = new Flywheel();
-    private Flywheel() {}
+@Config
+public class NextFlywheel implements Subsystem {
+    public static final NextFlywheel INSTANCE = new NextFlywheel();
+    private NextFlywheel() {}
     FlywheelPIDFControl controller;
     MotorEx shootL, shootR;
-    public static double threshold = 200;
+    public static double threshold = 30;
     public static double currentRPM;
     public boolean run = false;
 
     @Override
     public void initialize() {
         controller = new FlywheelPIDFControl(ActiveOpMode.hardwareMap());
-        shootL = new MotorEx("shootL");
-        shootR = new MotorEx("shootR").reversed();
+        shootL = new MotorEx("leftFly");
+        shootR = new MotorEx("rightFly").reversed();
     }
 
     @Override
     public void periodic() {
         controller.setPIDF(skS, skV, skP, skI, skD);
-        double[] result = LUT.lutGet(targetDistance);
-        interpolatedTargetRPM = result[1];
 
-        currentRPM = Math.abs((shootL.getVelocity() + shootR.getVelocity()) / 2);
+        currentRPM = Math.abs((shootR.getVelocity()) / 2);
         double batteryVoltage = getBatteryVoltage();
         double power = controller.update(targetRPM, currentRPM, batteryVoltage);
 
@@ -61,6 +58,9 @@ public class Flywheel implements Subsystem {
 
     public Command run() {
         return new InstantCommand(() -> targetRPM = interpolatedTargetRPM);
+    }
+    public Command runClose() {
+        return new InstantCommand(() -> targetRPM = closeRPM);
     }
 
     public Command stop() {

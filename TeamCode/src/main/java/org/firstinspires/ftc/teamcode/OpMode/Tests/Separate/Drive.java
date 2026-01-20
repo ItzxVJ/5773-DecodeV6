@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpMode.Tests;
+package org.firstinspires.ftc.teamcode.OpMode.Tests.Separate;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,10 +9,10 @@ public class Drive extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-        DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "leftFront");
+        DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class, "leftBack");
+        DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class, "rightFront");
+        DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "rightBack");
 
         frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
         backLeft.setDirection(DcMotorEx.Direction.REVERSE);
@@ -23,9 +23,9 @@ public class Drive extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            double y = -gamepad1.left_stick_y;
-            double x = -gamepad1.left_stick_x;
-            double rx = -gamepad1.right_stick_x;
+            double y = -gamepad1.left_stick_y / 2;
+            double x = -gamepad1.left_stick_x / 2;
+            double rx = gamepad1.right_stick_x / 2;
 
             double frontLeftPower  = y + x + rx;
             double backLeftPower   = y - x + rx;

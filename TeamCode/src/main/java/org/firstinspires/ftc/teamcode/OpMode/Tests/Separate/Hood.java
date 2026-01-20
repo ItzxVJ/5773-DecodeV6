@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpMode.Tests;
+package org.firstinspires.ftc.teamcode.OpMode.Tests.Separate;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,16 +13,20 @@ public class Hood extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Servo hood = hardwareMap.get(Servo.class, "hood");
+        Servo rightHood = hardwareMap.get(Servo.class, "rightHood");
+        Servo leftHood = hardwareMap.get(Servo.class, "leftHood");
+        rightHood.setDirection(Servo.Direction.REVERSE);
 
         waitForStart();
 
         while (opModeIsActive()) {
-            hood.setPosition(hoodPos);
+            rightHood.setPosition(hoodPos);
+            leftHood.setPosition(hoodPos);
 
             telemetry.addLine("Hood Servo Test");
             telemetry.addLine("Change 'hoodPos' w/ Dashboard");
-            telemetry.addData("Current Position", hood.getPosition());
+            telemetry.addData("Right Current Position", rightHood.getPosition());
+            telemetry.addData("Left Current Position", leftHood.getPosition());
             telemetry.update();
         }
     }

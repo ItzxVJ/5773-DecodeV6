@@ -1,19 +1,15 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
-import dev.nextftc.control.KineticState;
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.ftc.ActiveOpMode;
-import dev.nextftc.hardware.impl.ServoEx;
 
-public class Lights implements Subsystem {
-    public static final Lights INSTANCE = new Lights();
-    private Lights() { }
+public class NextLights implements Subsystem {
+    public static final NextLights INSTANCE = new NextLights();
+    private NextLights() { }
     private final RevBlinkinLedDriver lights = ActiveOpMode.hardwareMap().get(RevBlinkinLedDriver.class, "lights");
 
     public Command setRed() {
