@@ -17,7 +17,7 @@ public class NextTurret implements Subsystem {
     public static final NextTurret INSTANCE = new NextTurret();
     private NextTurret() {}
 
-    private final MotorEx turret = new MotorEx("turret").floatMode();
+    private final MotorEx turret = new MotorEx("turret", -1).floatMode();
 
     public static double rpt = 0.0029919; // radians per tick
     public static double ticksPerRevolution = (2 * Math.PI) / rpt;

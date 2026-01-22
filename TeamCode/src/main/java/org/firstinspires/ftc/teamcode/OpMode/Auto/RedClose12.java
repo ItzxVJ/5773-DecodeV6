@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
-import org.firstinspires.ftc.teamcode.zTrash.NextInterp;
+
 
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
-import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
+
 
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.commands.delays.Delay;
@@ -25,7 +25,7 @@ import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
-import dev.nextftc.ftc.components.BulkReadComponent;
+
 
 @Autonomous(name = "RedClose12")
 public class RedClose12 extends NextFTCOpMode {
@@ -42,7 +42,6 @@ public class RedClose12 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-//                        NextTurret.INSTANCE.resetTurret(),
                         NextFlywheel.INSTANCE.stop(),
                         new InstantCommand(() -> hoodPos = hoodClosePos)
                 )
@@ -56,7 +55,6 @@ public class RedClose12 extends NextFTCOpMode {
     public void onStartButtonPressed() {
         CommandManager.INSTANCE.scheduleCommand(
                         new SequentialGroup(
-//                            NextTurret.INSTANCE.faceCommand(redGoalPose, follower().getPose()),
                             NextPass.INSTANCE.intake,
                             NextFlywheel.INSTANCE.runClose(),
                             new FollowPath(firstShoot(follower())),
