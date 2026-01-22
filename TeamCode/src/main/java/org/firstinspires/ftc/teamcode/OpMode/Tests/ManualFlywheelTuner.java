@@ -37,7 +37,7 @@ public class ManualFlywheelTuner extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            controller.setPIDF(kS, kV, kP, kI, kD);
+            controller.setPIDF(kS, kV, kP, 0, kD);
 
             double currentRPM = Math.abs((shootL.getVelocity() + shootR.getVelocity()) / 2);
             double batteryVoltage = getBatteryVoltage();

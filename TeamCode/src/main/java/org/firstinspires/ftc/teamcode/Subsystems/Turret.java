@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.subsystems.Subsystem;
 import dev.nextftc.hardware.impl.MotorEx;
@@ -18,22 +19,21 @@ public class Turret implements Subsystem {
 
     private final MotorEx turret = new MotorEx("turret").floatMode();
 
-    /* ------------------- Constants ------------------- */
-
     public static double rpt = 0.0029919; // radians per tick
 
-    // Coarse PID (large error)
+    // Coarse PID
     public static double kP = 0.003;
     public static double kD = 0.000;
     public static double kF = 0.0;
 
-    // Fine PID (small error)
+    // Fine PID
     public static double sP = 0.005;
     public static double sD = 0.0001;
 
     public static double pidSwitch = 30; // ticks
 
-    /* ------------------- State ------------------- */
+    public static double MIN_YAW = Math.toRadians(-160);
+    public static double MAX_YAW = Math.toRadians(160);
 
     public static double target = 0;
     public static double error = 0;
@@ -44,7 +44,6 @@ public class Turret implements Subsystem {
 
     private double lastError = 0;
     private double lastTime = 0;
-    private double integral = 0;
     private final ElapsedTime timer = new ElapsedTime();
 
     @Override
@@ -57,16 +56,23 @@ public class Turret implements Subsystem {
     public void periodic() {
 
         if (manual) {
-            turret.setPower(manualPower);
+            double yaw = getYaw();
+
+            if ((yaw <= MIN_YAW && manualPower < 0) ||
+                    (yaw >= MAX_YAW && manualPower > 0)) {
+                turret.setPower(0);
+            } else {
+                turret.setPower(manualPower);
+            }
             return;
         }
 
         double current = turret.getCurrentPosition();
         error = target - current;
 
-        double currentTime = timer.seconds();
-        double dt = currentTime - lastTime;
-        lastTime = currentTime;
+        double now = timer.seconds();
+        double dt = now - lastTime;
+        lastTime = now;
 
         if (dt <= 0) return;
 
@@ -77,7 +83,6 @@ public class Turret implements Subsystem {
 
         double p = kp * error;
         double d = kd * ((error - lastError) / dt);
-
         double ff = coarse ? Math.signum(error) * kF : 0;
 
         power = p + d + ff;
@@ -87,11 +92,8 @@ public class Turret implements Subsystem {
         lastError = error;
     }
 
-    /* ------------------- Control API ------------------- */
-
     public void setTurretTarget(double ticks) {
         target = ticks;
-        integral = 0;
         lastError = 0;
     }
 
@@ -104,7 +106,7 @@ public class Turret implements Subsystem {
     }
 
     public void setYaw(double radians) {
-        radians = normalizeAngle(radians);
+        radians = applyYawLimits(radians);
         setTurretTarget(radians / rpt);
     }
 
@@ -117,16 +119,22 @@ public class Turret implements Subsystem {
                 targetPose.getY() - robotPose.getY(),
                 targetPose.getX() - robotPose.getX()
         );
-        setYaw(normalizeAngle(angleToTarget - robotPose.getHeading()));
+        setYaw(angleToTarget - robotPose.getHeading());
     }
 
-    public void resetTurret() {
-        turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        setTurretTarget(0);
+    public Command resetTurret() {
+        return new InstantCommand(() -> {
+            turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            setTurretTarget(0);
+        });
+
     }
 
-    /* ------------------- Manual Control ------------------- */
+    public Command faceCommand(Pose targetPose, Pose robotPose) {
+        return new LambdaCommand()
+                .setUpdate(() -> face(targetPose, robotPose));
+    }
 
     public void manual(double power) {
         manual = true;
@@ -137,10 +145,25 @@ public class Turret implements Subsystem {
         manual = false;
     }
 
-    /* ------------------- Utilities ------------------- */
-
     public boolean isReady() {
         return Math.abs(error) < pidSwitch;
+    }
+
+    private double applyYawLimits(double desiredYaw) {
+        desiredYaw = normalizeAngle(desiredYaw);
+
+        if (desiredYaw >= MIN_YAW && desiredYaw <= MAX_YAW) {
+            return desiredYaw;
+        }
+
+        double altYaw;
+        if (desiredYaw > MAX_YAW) {
+            altYaw = desiredYaw - 2 * Math.PI;
+        } else {
+            altYaw = desiredYaw + 2 * Math.PI;
+        }
+
+        return Math.max(MIN_YAW, Math.min(MAX_YAW, altYaw));
     }
 
     public static double normalizeAngle(double angleRadians) {
