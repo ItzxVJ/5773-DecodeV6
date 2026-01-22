@@ -9,18 +9,18 @@ public class NextHood implements Subsystem {
     public static final NextHood INSTANCE = new NextHood();
     private NextHood() {}
 
-    private final ServoEx rightHood = new ServoEx("rightHood");
-    private final ServoEx leftHood = new ServoEx("leftHood");
+    private final ServoEx rightHood = new ServoEx("rightHood", -1);
+    private final ServoEx leftHood = new ServoEx("leftHood", -1);
 
     @Override
     public void initialize() {
         leftHood.setPosition(hoodPos);
-        rightHood.setPosition(-hoodPos);
+        //rightHood.setPosition(hoodPos);
     }
 
     @Override
     public void periodic() {
         leftHood.setPosition(hoodPos);
-        rightHood.setPosition(-hoodPos);
+        //rightHood.setPosition(hoodPos);
     }
 }
