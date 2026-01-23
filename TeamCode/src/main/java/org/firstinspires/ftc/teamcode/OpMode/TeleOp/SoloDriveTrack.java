@@ -71,7 +71,7 @@ public class SoloDriveTrack extends NextFTCOpMode {
                 Gamepads.gamepad1().rightStickX()
         );
         driverControlled.schedule();
-        NextTurret.INSTANCE.faceCommand(redGoalPose, follower().getPose());
+        NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose());
         Gamepads.gamepad1().rightBumper()
                 .whenTrue(NextPass.INSTANCE.intake)
                 .whenBecomesFalse(NextPass.INSTANCE.rest);
@@ -84,7 +84,7 @@ public class SoloDriveTrack extends NextFTCOpMode {
                                 new InstantCommand(() -> hoodPos = hoodClosePos),
                                 NextFlywheel.INSTANCE.runClose(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                new WaitUntil(NextTurret.INSTANCE::isReady),
+                                //new WaitUntil(NextTurret.INSTANCE::isReady),
                                 new InstantCommand(() -> gatePos = gateAllow),
                                 new Delay(2),
                                 NextPass.INSTANCE.intake,

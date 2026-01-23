@@ -1,9 +1,15 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Core.Constants.*;
+import static dev.nextftc.extensions.pedro.PedroComponent.follower;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.function.Supplier;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.utility.InstantCommand;
@@ -17,37 +23,41 @@ public class NextTurret implements Subsystem {
     public static final NextTurret INSTANCE = new NextTurret();
     private NextTurret() {}
 
-    private final MotorEx turret = new MotorEx("turret", -1).floatMode();
+    /* ---------------- Hardware ---------------- */
 
-    public static double rpt = 0.0029919; // radians per tick
+    private final MotorEx turret = new MotorEx("turret", -1)
+            .floatMode();
+
+    /* ---------------- Conversion ---------------- */
+
+    // DO NOT CHANGE (empirically verified)
+    public static double rpt = 0.0036277061427;
     public static double ticksPerRevolution = (2 * Math.PI) / rpt;
 
+    /* ---------------- Soft Limits ---------------- */
 
-    public static double lowThreshold = -500;   // ticks
-    public static double highThreshold = 500;   // ticks
+    public static double lowLimit  = -807;
+    public static double highLimit =  866;
 
-    // Coarse PID
+    /* ---------------- PID ---------------- */
+
     public static double kP = 0.01;
     public static double kD = 0.0;
-    public static double kF = 0.0;
+    public static double kS = 0.05;
+    public static double settleTicks = 30;
 
-    // Fine PID
-    public static double sP = 0.01;
-    public static double sD = 0.0;
+    /* ---------------- State ---------------- */
 
-    public static double pidSwitch = 30; // ticks
-
-    public static double target = 0;
-    public static double error = 0;
-    public static double power = 0;
-
-    public static boolean manual = false;
-    public static double manualPower = 0;
-
+    private double targetTicks = 0;
     private double lastError = 0;
     private double lastTime = 0;
 
+    private boolean manual = false;
+    private double manualPower = 0;
+
     private final ElapsedTime timer = new ElapsedTime();
+
+    /* ---------------- Lifecycle ---------------- */
 
     @Override
     public void initialize() {
@@ -63,106 +73,85 @@ public class NextTurret implements Subsystem {
             return;
         }
 
-        double current = turret.getCurrentPosition();
-        error = target - current;
+        double currentTicks = turret.getCurrentPosition();
+        double error = targetTicks - currentTicks;
 
-        double currentTime = timer.seconds();
-        double dt = currentTime - lastTime;
-        lastTime = currentTime;
-
+        double now = timer.seconds();
+        double dt = now - lastTime;
+        lastTime = now;
         if (dt <= 0) return;
 
-        boolean coarse = Math.abs(error) > pidSwitch;
+        double p = kP * error;
+        double d = kD * ((error - lastError) / dt);
 
-        double kp = coarse ? kP : sP;
-        double kd = coarse ? kD : sD;
+        double power = p + d;
 
-        double p = kp * error;
-        double d = kd * ((error - lastError) / dt);
-        double ff = coarse ? Math.signum(error) * kF : 0;
+        if (Math.abs(error) > 1) {
+            power += Math.signum(error) * kS;
+        }
 
-        power = p + d + ff;
+        if (currentTicks <= lowLimit && power < 0) power = 0;
+        if (currentTicks >= highLimit && power > 0) power = 0;
 
-        if (current >= highThreshold && power > 0) power = 0;
-        if (current <= lowThreshold && power < 0) power = 0;
-
-        power = Math.max(-1.0, Math.min(1.0, power));
-
-        turret.setPower(power);
+        turret.setPower(clamp(power, -1.0, 1.0));
         lastError = error;
     }
 
-    public void setTurretTarget(double ticks) {
-        target = enforceLimits(ticks);
+    /* ---------------- Control ---------------- */
+
+    public void setYaw(double desiredYawRad) {
+        double currentYaw = getYaw();
+        double error = normalizeAngle(desiredYawRad - currentYaw);
+        targetTicks = clamp(
+                turret.getCurrentPosition() + (error / rpt),
+                lowLimit,
+                highLimit
+        );
         lastError = 0;
     }
 
-    private double enforceLimits(double targetTicks) {
-        if (targetTicks > highThreshold) {
-            targetTicks -= ticksPerRevolution;
-        } else if (targetTicks < lowThreshold) {
-            targetTicks += ticksPerRevolution;
-        }
-        return targetTicks;
-    }
-
-    public double getTurret() {
-        return turret.getCurrentPosition();
-    }
-
     public double getYaw() {
-        return normalizeAngle(getTurret() * rpt);
+        return turret.getCurrentPosition() * rpt;
     }
 
-    public void setYaw(double radians) {
-        radians = normalizeAngle(radians);
-        setTurretTarget(radians / rpt);
-    }
+    /* ---------------- Tracking ---------------- */
 
-    public void addYaw(double radians) {
-        setYaw(getYaw() + radians);
-    }
-
-    public void face(Pose targetPose, Pose robotPose) {
+    public void face(Pose target, Pose robot) {
         double angleToTarget = Math.atan2(
-                targetPose.getY() - robotPose.getY(),
-                targetPose.getX() - robotPose.getX()
+                target.getY() - robot.getY(),
+                target.getX() - robot.getX()
         );
-        setYaw(angleToTarget - robotPose.getHeading());
+
+        setYaw(angleToTarget - robot.getHeading());
     }
 
-    public void manual(double power) {
-        manual = true;
-        manualPower = power;
-    }
+    /* ---------------- Commands ---------------- */
 
-    public void automatic() {
-        manual = false;
-    }
-
-    public boolean isReady() {
-        return Math.abs(error) < pidSwitch;
-    }
-
-    public static double normalizeAngle(double angleRadians) {
-        double angle = angleRadians % (2 * Math.PI);
-        if (angle <= -Math.PI) angle += 2 * Math.PI;
-        if (angle > Math.PI) angle -= 2 * Math.PI;
-        return angle;
-    }
-
-    /* ------------------- Commands ------------------- */
-
-    public Command faceCommand(Pose targetPose, Pose robotPose) {
+    public Command faceCommand(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new LambdaCommand()
-                .setUpdate(() -> face(targetPose, robotPose));
+                .setUpdate(() -> face(target, robotPoseSupplier.get()))
+                .setIsDone(() -> false);
     }
 
     public Command resetTurret() {
         return new InstantCommand(() -> {
             turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            setTurretTarget(0);
+            turret.getMotor().setDirection(DcMotorSimple.Direction.REVERSE);
+            targetTicks = 0;
         });
+    }
+
+    /* ---------------- Utils ---------------- */
+
+    private static double normalizeAngle(double a) {
+        a %= (2 * Math.PI);
+        if (a <= -Math.PI) a += 2 * Math.PI;
+        if (a > Math.PI) a -= 2 * Math.PI;
+        return a;
+    }
+
+    private static double clamp(double v, double min, double max) {
+        return Math.max(min, Math.min(max, v));
     }
 }

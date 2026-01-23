@@ -16,7 +16,7 @@ public class Constants {
     public static double passOut = -1;
     public static double passRest = 0;
     public static double interpolatedHoodPos;
-    public static Pose redGoalPose = new Pose(63.6,-39.3, Math.toRadians(-2.4));
+    public static Pose redGoalPose = new Pose(69,-54);
     public static Pose blueGoalPose = new Pose(0,0, Math.toRadians(0));
     public static double closeRPM = 550;
     public static double interpolatedTargetRPM;
@@ -24,7 +24,7 @@ public class Constants {
     public static double restRPM = 200;
     public static double targetDistance;
     public static LookUpTable LUT;
-    public static double hoodClosePos = 0.2;
+    public static double hoodClosePos = 0.1;
     public static double hoodPos;
     public static double hoodFarPos = 0.2;
     public static double hoodMinPos = 0;

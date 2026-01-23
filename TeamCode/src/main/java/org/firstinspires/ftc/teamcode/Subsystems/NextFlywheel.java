@@ -32,7 +32,7 @@ public class NextFlywheel implements Subsystem {
     public void periodic() {
         controller.setPIDF(skS, skV, skP, skI, skD);
 
-        currentRPM = Math.abs((shootR.getVelocity()) / 2);
+        currentRPM = Math.abs(shootR.getVelocity());
         double batteryVoltage = getBatteryVoltage();
         double power = controller.update(targetRPM, currentRPM, batteryVoltage);
 

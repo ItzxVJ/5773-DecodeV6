@@ -42,7 +42,7 @@ public class Flywheel extends LinearOpMode {
             controller.setPIDF(skS, skV, skP, skI, skD);
 
             double currentRPM =
-                    Math.abs((shootL.getVelocity() + shootR.getVelocity()) / 2);
+                    Math.abs(shootR.getVelocity());
 
             double batteryVoltage = getBatteryVoltage();
             double power = controller.update(targetRPM, currentRPM, batteryVoltage);

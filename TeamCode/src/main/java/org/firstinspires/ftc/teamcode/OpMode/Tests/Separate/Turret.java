@@ -16,7 +16,7 @@ public class Turret extends LinearOpMode {
     /* ---------- CONVERSION ---------- */
 
     // radians per encoder tick
-    public static double rpt = 0.0029919;
+    public static double rpt = 0.0036277061427;
 
     /* ---------- PID GAINS ---------- */
 
@@ -34,8 +34,8 @@ public class Turret extends LinearOpMode {
 
     /* ---------- SOFT LIMITS (ENCODER TICKS) ---------- */
 
-    public static double lowThresholdTicks = -2000;   // set later
-    public static double highThresholdTicks = 2000;   // set later
+    public static double lowThresholdTicks = -807;   // set later
+    public static double highThresholdTicks = 866;   // set later
 
     /* ---------- TARGET ---------- */
 

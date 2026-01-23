@@ -12,13 +12,13 @@ public final class BasicRedClose12 {
     public static Pose pre1Intake = new Pose(20.3, -23.5, -1.6);
     public static Pose intake1 = new Pose(19.3, -43.1, -1.6);
     public static Pose secondShootPos = new Pose(30.6, -14.3, -2.1);
-    public static Pose pre2Intake = new Pose(-3.8, -23.2, -1.6);
+    public static Pose pre2Intake = new Pose(-3.8, -23.5, -1.6);
     public static Pose intake2 = new Pose(-4.5, -41.6, -1.6);
     public static Pose thirdShootPos = new Pose(30.6, -14.3, -2.1);
-    public static Pose pre3Intake = new Pose(-27.6, -24, -1.6);
+    public static Pose pre3Intake = new Pose(-27.6, -20, -1.6);
     public static Pose intake3 = new Pose(-28.4, -41.6, -1.6);
     public static Pose fourthShootPos = new Pose(30.6, -14.3, -2.1);
-    public static Pose parkPos = new Pose(17.5, -19.5, -0.7);
+    public static Pose parkPos = new Pose(17.5, -19.5, -2.1);
 
     public static PathChain firstShoot(Follower follower) {
         return follower.pathBuilder()

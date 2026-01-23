@@ -42,9 +42,14 @@ public class RedClose12V3 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-                        NextTurret.INSTANCE.resetTurret(),
                         NextFlywheel.INSTANCE.stop(),
-                        new InstantCommand(() -> hoodPos = hoodClosePos)
+                        new InstantCommand(() -> hoodPos = hoodClosePos),
+                        new SequentialGroup(
+                            NextTurret.INSTANCE.resetTurret(),
+                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose()
+                        )
+
+                        )
                 )
         );
     }
@@ -55,8 +60,6 @@ public class RedClose12V3 extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         CommandManager.INSTANCE.scheduleCommand(
-                new ParallelGroup(
-                    NextTurret.INSTANCE.faceCommand(redGoalPose, follower().getPose()),
                     new SequentialGroup(
                         NextPass.INSTANCE.intake,
                         NextFlywheel.INSTANCE.runClose(),
@@ -95,11 +98,12 @@ public class RedClose12V3 extends NextFTCOpMode {
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(park(follower()))
                     )
-                )
+
         );
     }
     @Override
     public void onUpdate() {
+        follower().update();
     }
     @Override
     public void onStop() {
