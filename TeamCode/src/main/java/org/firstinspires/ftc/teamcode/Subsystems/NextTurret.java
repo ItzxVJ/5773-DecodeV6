@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -23,41 +20,25 @@ public class NextTurret implements Subsystem {
     public static final NextTurret INSTANCE = new NextTurret();
     private NextTurret() {}
 
-    /* ---------------- Hardware ---------------- */
-
     private final MotorEx turret = new MotorEx("turret", -1)
             .floatMode();
 
-    /* ---------------- Conversion ---------------- */
 
     // DO NOT CHANGE (empirically verified)
     public static double rpt = 0.0036277061427;
-    public static double ticksPerRevolution = (2 * Math.PI) / rpt;
-
-    /* ---------------- Soft Limits ---------------- */
 
     public static double lowLimit  = -807;
     public static double highLimit =  866;
 
-    /* ---------------- PID ---------------- */
-
     public static double kP = 0.01;
     public static double kD = 0.0;
     public static double kS = 0.05;
-    public static double settleTicks = 30;
-
-    /* ---------------- State ---------------- */
 
     private double targetTicks = 0;
     private double lastError = 0;
     private double lastTime = 0;
 
-    private boolean manual = false;
-    private double manualPower = 0;
-
     private final ElapsedTime timer = new ElapsedTime();
-
-    /* ---------------- Lifecycle ---------------- */
 
     @Override
     public void initialize() {
@@ -67,11 +48,6 @@ public class NextTurret implements Subsystem {
 
     @Override
     public void periodic() {
-
-        if (manual) {
-            turret.setPower(manualPower);
-            return;
-        }
 
         double currentTicks = turret.getCurrentPosition();
         double error = targetTicks - currentTicks;
@@ -97,8 +73,6 @@ public class NextTurret implements Subsystem {
         lastError = error;
     }
 
-    /* ---------------- Control ---------------- */
-
     public void setYaw(double desiredYawRad) {
         double currentYaw = getYaw();
         double error = normalizeAngle(desiredYawRad - currentYaw);
@@ -114,8 +88,6 @@ public class NextTurret implements Subsystem {
         return turret.getCurrentPosition() * rpt;
     }
 
-    /* ---------------- Tracking ---------------- */
-
     public void face(Pose target, Pose robot) {
         double angleToTarget = Math.atan2(
                 target.getY() - robot.getY(),
@@ -124,8 +96,6 @@ public class NextTurret implements Subsystem {
 
         setYaw(angleToTarget - robot.getHeading());
     }
-
-    /* ---------------- Commands ---------------- */
 
     public Command faceCommand(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new LambdaCommand()
@@ -141,8 +111,6 @@ public class NextTurret implements Subsystem {
             targetTicks = 0;
         });
     }
-
-    /* ---------------- Utils ---------------- */
 
     private static double normalizeAngle(double a) {
         a %= (2 * Math.PI);

@@ -23,14 +23,14 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
-import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "RedClose12V2")
-public class RedClose12V2 extends NextFTCOpMode {
+@Autonomous(name = "RedClose12V4")
+public class RedClose12V4 extends NextFTCOpMode {
     {
         addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE),
+                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
                 new PedroComponent(PConstants::createFollower)
         );
     }
@@ -41,9 +41,13 @@ public class RedClose12V2 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-//                        NextTurret.INSTANCE.resetTurret(),
                         NextFlywheel.INSTANCE.stop(),
-                        new InstantCommand(() -> hoodPos = hoodClosePos)
+                        new SequentialGroup(
+                            NextTurret.INSTANCE.resetTurret(),
+                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
+                        ),
+                        NextFlywheel.INSTANCE.stop(),
+                        NextHood.INSTANCE.updateAngle()
                 )
         );
     }
@@ -55,9 +59,9 @@ public class RedClose12V2 extends NextFTCOpMode {
     public void onStartButtonPressed() {
         CommandManager.INSTANCE.scheduleCommand(
                 new SequentialGroup(
-//                            NextTurret.INSTANCE.faceCommand(redGoalPose, follower().getPose()),
                         NextPass.INSTANCE.intake,
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> firstShootPos),
+                        NextFlywheel.INSTANCE.run(),
                         new FollowPath(firstShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
@@ -66,7 +70,8 @@ public class RedClose12V2 extends NextFTCOpMode {
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(firstPreIntake(follower())),
                         new FollowPath(firstIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> secondShootPos),
+                        NextFlywheel.INSTANCE.run(),
                         new FollowPath(secondShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
@@ -75,7 +80,8 @@ public class RedClose12V2 extends NextFTCOpMode {
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(secondPreIntake(follower())),
                         new FollowPath(secondIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> thirdShootPos),
+                        NextFlywheel.INSTANCE.run(),
                         new FollowPath(thirdShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
@@ -84,7 +90,8 @@ public class RedClose12V2 extends NextFTCOpMode {
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(thirdPreIntake(follower())),
                         new FollowPath(thirdIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> fourthShootPos),
+                        NextFlywheel.INSTANCE.run(),
                         new FollowPath(fourthShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
@@ -92,16 +99,20 @@ public class RedClose12V2 extends NextFTCOpMode {
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(park(follower()))
-
-
                 )
+
         );
     }
     @Override
     public void onUpdate() {
+        follower().update();
+        ActiveOpMode.telemetry().addData("Distance", gDist);
+        ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
+        ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
+        ActiveOpMode.telemetry().update();
     }
     @Override
     public void onStop() {
-
+        lastPose = follower().getPose();
     }
 }
