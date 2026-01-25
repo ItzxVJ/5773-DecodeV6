@@ -28,12 +28,13 @@ public class NextHood implements Subsystem {
     }
 
     public static double hoodAngle(double dist) {
-        if (dist < 61.1) { // Close Angle Equation
+        if (dist < 89.2) { // Close Angle Equation
             return MathFunctions.clamp(
-                    -0.0000201513 * Math.pow(dist, 3)
-                            + 0.00248444 * Math.pow(dist, 2)
-                            - 0.105373 * dist
-                            + 1.9898,
+                    2.57067e-7 * Math.pow(dist, 4)
+                            - 0.0000631274 * Math.pow(dist, 3)
+                            + 0.00559115 * Math.pow(dist, 2)
+                            - 0.216311 * dist
+                            + 3.53727,
                     0, 0.5
             );
         } else { // Far Angle Equation

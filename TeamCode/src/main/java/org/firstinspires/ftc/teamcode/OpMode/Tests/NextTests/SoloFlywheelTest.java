@@ -1,9 +1,11 @@
-package org.firstinspires.ftc.teamcode.OpMode.TeleOp;
+package org.firstinspires.ftc.teamcode.OpMode.Tests.NextTests;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
@@ -15,7 +17,6 @@ import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
 import dev.nextftc.bindings.BindingManager;
 
-import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -27,8 +28,6 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
-import dev.nextftc.hardware.impl.MotorEx;
 
 @TeleOp(name = "Empirical Test w/ Align")
 public class SoloFlywheelTest extends NextFTCOpMode {
@@ -40,14 +39,13 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                 BindingsComponent.INSTANCE
         );
     }
-    private MotorEx frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor;
+
+    FtcDashboard dashboard;
+
     @Override
     public void onInit() {
         follower().setStartingPose(lastPose);
-        frontLeftMotor = new MotorEx("leftFront").reversed();
-        frontRightMotor = new MotorEx("rightFront");
-        backLeftMotor = new MotorEx("leftBack").reversed();
-        backRightMotor = new MotorEx("rightBack");
+        dashboard = FtcDashboard.getInstance();
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateAllow),
@@ -62,16 +60,6 @@ public class SoloFlywheelTest extends NextFTCOpMode {
     }
     @Override
     public void onStartButtonPressed() {
-        Command driverControlled = new MecanumDriverControlled(
-                frontLeftMotor,
-                frontRightMotor,
-                backLeftMotor,
-                backRightMotor,
-                Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX()
-        );
-        driverControlled.schedule();
 
         Gamepads.gamepad1().rightBumper()
                 .whenTrue(NextPass.INSTANCE.intake)
@@ -83,6 +71,10 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                 .whenBecomesTrue(NextFlywheel.INSTANCE.run());
         Gamepads.gamepad1().x()
                 .whenBecomesTrue(NextFlywheel.INSTANCE.stop());
+        Gamepads.gamepad1().dpadDown()
+                .whenBecomesTrue(() -> gatePos = gateBlock);
+        Gamepads.gamepad1().dpadUp()
+                .whenBecomesTrue(() -> gatePos = gateAllow);
     }
 
     @Override
@@ -92,7 +84,15 @@ public class SoloFlywheelTest extends NextFTCOpMode {
         ActiveOpMode.telemetry().addData("Distance", gDist);
         ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
         ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
+        ActiveOpMode.telemetry().addData("Current RPM", NextFlywheel.currentRPM);
         ActiveOpMode.telemetry().update();
+
+        TelemetryPacket packet = new TelemetryPacket();
+        packet.put("Target RPM", targetRPM);
+        packet.put("Current RPM", NextFlywheel.currentRPM);
+        packet.put("Error", targetRPM - NextFlywheel.currentRPM);
+
+        dashboard.sendTelemetryPacket(packet);
 
     }
 

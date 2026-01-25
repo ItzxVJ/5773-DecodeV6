@@ -1,13 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpMode.TeleOp;
 
-import static org.firstinspires.ftc.teamcode.Core.Constants.commandedRPM;
-import static org.firstinspires.ftc.teamcode.Core.Constants.gDist;
-import static org.firstinspires.ftc.teamcode.Core.Constants.gateAllow;
-import static org.firstinspires.ftc.teamcode.Core.Constants.gateBlock;
-import static org.firstinspires.ftc.teamcode.Core.Constants.gatePos;
-import static org.firstinspires.ftc.teamcode.Core.Constants.hoodClosePos;
-import static org.firstinspires.ftc.teamcode.Core.Constants.hoodPos;
-import static org.firstinspires.ftc.teamcode.Core.Constants.redGoalPose;
+import static org.firstinspires.ftc.teamcode.Core.Constants.*;
+import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -15,15 +9,10 @@ import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
-
-import org.firstinspires.ftc.teamcode.Subsystems.NextLights;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
 import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
 import dev.nextftc.bindings.BindingManager;
-
-import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.commands.delays.Delay;
@@ -34,16 +23,15 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.extensions.pedro.PedroDriverControlled;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
-import dev.nextftc.hardware.impl.MotorEx;
 
-@TeleOp(name = "SoloDrive")
-public class SoloDrive extends NextFTCOpMode {
-    public SoloDrive() {
+@TeleOp(name = "RedSoloDrive")
+public class RedSoloDrive extends NextFTCOpMode {
+    public RedSoloDrive() {
         addComponents(
                 new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
@@ -51,18 +39,13 @@ public class SoloDrive extends NextFTCOpMode {
                 BindingsComponent.INSTANCE
         );
     }
-    private MotorEx frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor;
+
     @Override
     public void onInit() {
-        frontLeftMotor = new MotorEx("leftFront").reversed();
-        frontRightMotor = new MotorEx("rightFront");
-        backLeftMotor = new MotorEx("leftBack").reversed();
-        backRightMotor = new MotorEx("rightBack");
+        follower().setStartingPose(lastPose);
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-                        new InstantCommand(() -> hoodPos = hoodClosePos),
-                        NextFlywheel.INSTANCE.stop(),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
@@ -72,40 +55,47 @@ public class SoloDrive extends NextFTCOpMode {
                 )
         );
     }
+
     @Override
     public void onStartButtonPressed() {
-        Command driverControlled = new MecanumDriverControlled(
-                frontLeftMotor,
-                frontRightMotor,
-                backLeftMotor,
-                backRightMotor,
-                Gamepads.gamepad1().rightStickX().negate(),
+        Command driverControlled = new PedroDriverControlled(
                 Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX()
+                Gamepads.gamepad1().leftStickX().negate(),
+                Gamepads.gamepad1().rightStickX().negate(),
+                true
         );
         driverControlled.schedule();
 
-        Gamepads.gamepad2().rightBumper()
+        Gamepads.gamepad1().rightBumper()
                 .whenTrue(NextPass.INSTANCE.intake)
                 .whenBecomesFalse(NextPass.INSTANCE.rest);
-        Gamepads.gamepad2().leftBumper()
+
+        Gamepads.gamepad1().leftBumper()
                 .whenTrue(NextPass.INSTANCE.reverse)
                 .whenBecomesFalse(NextPass.INSTANCE.rest);
-        Gamepads.gamepad2().rightTrigger()
-                .atLeast(0.3)
-                .whenTrue(new ParallelGroup(
-                        NextFlywheel.INSTANCE.run(),
-                        NextPass.INSTANCE.intake
-                    )
-                )
-                .whenFalse(NextFlywheel.INSTANCE.rest())
-                .whenBecomesFalse(new InstantCommand(() -> gatePos = gateBlock))
-                .whenBecomesTrue(new SequentialGroup(
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow)
-                )
-        );
+
+        Gamepads.gamepad1().x()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
+
+        Gamepads.gamepad1().a()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rev());
+
+        Gamepads.gamepad1().b()
+                .whenBecomesTrue(
+                        new SequentialGroup(
+                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                                NextFlywheel.INSTANCE.instantRun(),
+                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                                NextPass.INSTANCE.intake,
+                                new InstantCommand(() -> gatePos = gateAllow),
+                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateBlock),
+                                NextFlywheel.INSTANCE.rest(),
+                                NextPass.INSTANCE.rest
+                        )
+                );
     }
+
     @Override
     public void onUpdate() {
         BindingManager.update();
@@ -114,7 +104,6 @@ public class SoloDrive extends NextFTCOpMode {
         ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
         ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
         ActiveOpMode.telemetry().update();
-
     }
 
     @Override

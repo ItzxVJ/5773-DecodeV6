@@ -25,14 +25,13 @@ public class NextTurret implements Subsystem {
 
 
     // DO NOT CHANGE (empirically verified)
-    public static double rpt = 0.0036277061427;
+    public static double rpt = 0.00376689766;
 
     public static double lowLimit  = -807;
     public static double highLimit =  866;
 
-    public static double kP = 0.01;
-    public static double kD = 0.0;
-    public static double kS = 0.05;
+    public static double kP = 0.0035;
+    public static double kS = 0.1;
 
     private double targetTicks = 0;
     private double lastError = 0;
@@ -58,16 +57,12 @@ public class NextTurret implements Subsystem {
         if (dt <= 0) return;
 
         double p = kP * error;
-        double d = kD * ((error - lastError) / dt);
 
-        double power = p + d;
+        double power = p;
 
         if (Math.abs(error) > 1) {
             power += Math.signum(error) * kS;
         }
-
-        if (currentTicks <= lowLimit && power < 0) power = 0;
-        if (currentTicks >= highLimit && power > 0) power = 0;
 
         turret.setPower(clamp(power, -1.0, 1.0));
         lastError = error;

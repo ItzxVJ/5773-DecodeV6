@@ -17,6 +17,7 @@ import dev.nextftc.bindings.BindingManager;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
+import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -24,6 +25,7 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.extensions.pedro.PedroDriverControlled;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
@@ -41,36 +43,28 @@ public class RedDualDrive extends NextFTCOpMode {
                 BindingsComponent.INSTANCE
         );
     }
-    private MotorEx frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor;
     @Override
     public void onInit() {
         follower().setStartingPose(lastPose);
-        frontLeftMotor = new MotorEx("leftFront").reversed();
-        frontRightMotor = new MotorEx("rightFront");
-        backLeftMotor = new MotorEx("leftBack").reversed();
-        backRightMotor = new MotorEx("rightBack");
-        CommandManager.INSTANCE.scheduleCommand(
+                CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        NextFlywheel.INSTANCE.stop(),
+                        new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose())
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
+                        NextHood.INSTANCE.updateAngle()
                 )
         );
     }
     @Override
     public void onStartButtonPressed() {
-        Command driverControlled = new MecanumDriverControlled(
-                frontLeftMotor,
-                frontRightMotor,
-                backLeftMotor,
-                backRightMotor,
+        Command driverControlled = new PedroDriverControlled(
                 Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX()
+                Gamepads.gamepad1().leftStickX().negate(),
+                Gamepads.gamepad1().rightStickX().negate(),
+                true
         );
         driverControlled.schedule();
 
@@ -80,18 +74,22 @@ public class RedDualDrive extends NextFTCOpMode {
         Gamepads.gamepad2().leftBumper()
                 .whenTrue(NextPass.INSTANCE.reverse)
                 .whenBecomesFalse(NextPass.INSTANCE.rest);
-        Gamepads.gamepad2().rightTrigger()
-                .atLeast(0.3)
-                .whenTrue(new ParallelGroup(
-                                NextFlywheel.INSTANCE.run(),
-                                NextPass.INSTANCE.intake
-                        )
-                )
-                .whenFalse(NextFlywheel.INSTANCE.rest())
-                .whenBecomesFalse(new InstantCommand(() -> gatePos = gateBlock))
-                .whenBecomesTrue(new SequentialGroup(
+        Gamepads.gamepad2().x()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
+        Gamepads.gamepad2().a()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rev());
+        Gamepads.gamepad2().b()
+                .whenBecomesTrue(
+                        new SequentialGroup(
+                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                                NextFlywheel.INSTANCE.instantRun(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                new InstantCommand(() -> gatePos = gateAllow)
+                                NextPass.INSTANCE.intake,
+                                new InstantCommand(() -> gatePos = gateAllow),
+                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateBlock),
+                                NextFlywheel.INSTANCE.rest(),
+                                NextPass.INSTANCE.rest
                         )
                 );
     }

@@ -13,4 +13,5 @@ public class NextPass implements Subsystem {
     public Command intake = new SetPower(pass, passIn).requires(this);
     public Command reverse = new SetPower(pass, passOut).requires(this);
     public Command rest = new SetPower(pass, passRest).requires(this);
+    public Command chill = new SetPower(pass, passIn / 1.5).requires(this);
 }

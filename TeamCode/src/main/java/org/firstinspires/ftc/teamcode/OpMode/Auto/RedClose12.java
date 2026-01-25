@@ -27,7 +27,7 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.NextFTCOpMode;
 
 
-@Autonomous(name = "RedClose12")
+//@Autonomous(name = "RedClose12")
 public class RedClose12 extends NextFTCOpMode {
     {
         addComponents(

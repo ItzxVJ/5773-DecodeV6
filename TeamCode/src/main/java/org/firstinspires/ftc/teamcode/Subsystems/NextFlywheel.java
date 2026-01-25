@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
 
 import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.subsystems.Subsystem;
@@ -32,6 +33,7 @@ public class NextFlywheel implements Subsystem {
     public static double currentRPM = 0;
     public static boolean chill;
     public static boolean stop;
+    public static boolean rev;
 
     @Override
     public void initialize() {
@@ -62,22 +64,23 @@ public class NextFlywheel implements Subsystem {
     }
 
     public static double flywheelSpeed(double dist) {
-        if (dist >= 61.1) { // Far RPM Equation
-            return MathFunctions.clamp(
-                    0.000256182 * Math.pow(dist, 3)
-                            + 0.103637 * Math.pow(dist, 2)
-                            + 18.01228 * dist
-                            + 227.82463,
-                    700, 1700
-            );
-        } else { // Close RPM Equation
-            return MathFunctions.clamp(
-                    -0.108666 * Math.pow(dist, 2)
-                            + 16.99431 * dist
-                            + 466.29551,
-                    700, 1700
-            );
-        }
+
+        return MathFunctions.clamp(
+                0.000010076 * Math.pow(dist, 4)
+                        - 0.00402775 * Math.pow(dist, 3)
+                        + 0.566131 * Math.pow(dist, 2)
+                        - 27.51827 * dist
+                        + 1226.37926,
+                700, 1700
+        );
+
+    }
+
+    public Command calcRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
+        return new InstantCommand(() -> {
+            gDist  = distanceTo(target, robotPoseSupplier.get());
+            computedRPM = flywheelSpeed(gDist);
+        });
     }
 
 
@@ -92,17 +95,25 @@ public class NextFlywheel implements Subsystem {
 
     public Command run() {
         return new LambdaCommand()
-                .setStart(() -> {chill = false; stop = false;})
+                .setStart(() -> {chill = false; stop = false; rev = false;})
                 .setUpdate(() -> commandedRPM = computedRPM)
-                .setIsDone(() -> (chill = true) || (stop = true));
+                .setIsDone(() -> (chill = true) || (stop = true) || (rev = true));
+    }
+
+    public Command instantRun() {
+        return new InstantCommand(() -> commandedRPM = computedRPM);
     }
 
     public Command rest() {
-        return new InstantCommand(() -> {commandedRPM = restRPM; chill = true;});
+        return new InstantCommand(() -> commandedRPM = restRPM);
     }
 
     public Command stop() {
-        return new InstantCommand(() -> {commandedRPM = 0; stop = true;});
+        return new InstantCommand(() -> commandedRPM = 0);
+    }
+
+    public Command rev() {
+        return new InstantCommand(() -> commandedRPM = 1000);
     }
 
     public boolean isReady() {

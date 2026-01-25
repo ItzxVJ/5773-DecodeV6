@@ -7,8 +7,8 @@ import com.pedropathing.geometry.Pose;
 @Config
 public class Constants {
     public static double n = 3.1415926;
-    public static double gateAllow = 0.6;
-    public static double gateBlock = 0.4;
+    public static double gateAllow = 0.62;
+    public static double gateBlock = 0.425;
     public static double gatePos;
 
     public static double passIn = 1;
@@ -29,9 +29,12 @@ public class Constants {
     public static double hoodFarPos = 0.2;
     public static double hoodMinPos = 0;
     public static double hoodMaxPos = 0.5;
-    public static double skP = 0.005, skI, skD, skV = 0.0046, skS = 0.9;
+    public static double skP = 0.13, skI, skD, skV = 0.004, skS = 3.3;
+    public static double fskP = 0.005, fskI, fskD, fskV = 0.0046, fskS = 0.9;
+    public static double cskP = 0.005, cskI, cskD, cskV = 0.0046, cskS = 0.9;
     public static double fSpeed;
     public static double gDist;
     public static double commandedRPM;
     public static double computedRPM;
+    public static double shootWait = 1.25;
 }
