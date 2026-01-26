@@ -23,18 +23,15 @@ public class NextTurret implements Subsystem {
     private final MotorEx turret = new MotorEx("turret", -1)
             .floatMode();
 
-
-    // DO NOT CHANGE (empirically verified)
     public static double rpt = 0.00376689766;
 
-    public static double lowLimit  = -807;
-    public static double highLimit =  866;
+    public static double lowLimit  = -683;
+    public static double highLimit = 683;
 
     public static double kP = 0.0035;
     public static double kS = 0.1;
 
     private double targetTicks = 0;
-    private double lastError = 0;
     private double lastTime = 0;
 
     private final ElapsedTime timer = new ElapsedTime();
@@ -56,27 +53,23 @@ public class NextTurret implements Subsystem {
         lastTime = now;
         if (dt <= 0) return;
 
-        double p = kP * error;
-
-        double power = p;
+        double power = kP * error;
 
         if (Math.abs(error) > 1) {
             power += Math.signum(error) * kS;
         }
 
         turret.setPower(clamp(power, -1.0, 1.0));
-        lastError = error;
     }
 
     public void setYaw(double desiredYawRad) {
         double currentYaw = getYaw();
         double error = normalizeAngle(desiredYawRad - currentYaw);
-        targetTicks = clamp(
-                turret.getCurrentPosition() + (error / rpt),
-                lowLimit,
-                highLimit
-        );
-        lastError = 0;
+
+        double desiredTicks =
+                turret.getCurrentPosition() + (error / rpt);
+
+        targetTicks = clamp(desiredTicks, lowLimit, highLimit);
     }
 
     public double getYaw() {

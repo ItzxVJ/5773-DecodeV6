@@ -15,7 +15,7 @@ public final class RedClose18 {
     public static Pose intake1 = new Pose(20, -44, -1.7);
 
     public static Pose secondShootPos = new Pose(19.4, -13.4, -2.6);
-    public static Pose intake2 = new Pose(-8, -44, -1.6);
+    public static Pose intake2 = new Pose(-8, -48, -1.6);
 
     public static Pose thirdShootPos = new Pose(20.3, -13.2, -2);
     public static Pose intake3 = new Pose(-3.6, -49.6, -1.2);
@@ -33,8 +33,8 @@ public final class RedClose18 {
     /* ------------------ CONTROL POINTS ------------------ */
 
     public static Pose pre1Control = new Pose(20.6, -28.4, -1.6);
-    public static Pose pre2Control = new Pose(-6.5, -19.9, -2.1);
-    public static Pose pre5Control = new Pose(-34, -22.7, -2.3);
+    public static Pose pre2Control = new Pose(-9, -19.9, -2.1);
+    public static Pose pre5Control = new Pose(-43, -22.7, -2.3);
     public static Pose pre3ShootControl = new Pose(6.2, -25.5,-2.3);
     public static Pose pre4ShootControl = new Pose(2.5, -30.5, -2.1);
     public static Pose pre5ShootControl = pre4ShootControl;

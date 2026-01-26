@@ -30,8 +30,6 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
-import dev.nextftc.hardware.driving.MecanumDriverControlled;
-import dev.nextftc.hardware.impl.MotorEx;
 
 @TeleOp(name = "RedDualDrive")
 public class RedDualDrive extends NextFTCOpMode {
@@ -61,11 +59,12 @@ public class RedDualDrive extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                Gamepads.gamepad1().leftStickY().negate(),
-                Gamepads.gamepad1().leftStickX().negate(),
-                Gamepads.gamepad1().rightStickX().negate(),
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y / 1.5,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x / 1.5,
+                () -> (double) -ActiveOpMode.gamepad1().right_stick_x / 3,
                 true
         );
+
         driverControlled.schedule();
 
         Gamepads.gamepad2().rightBumper()
