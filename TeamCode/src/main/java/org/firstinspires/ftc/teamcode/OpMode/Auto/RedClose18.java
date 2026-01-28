@@ -35,8 +35,6 @@ public class RedClose18 extends NextFTCOpMode {
         );
     }
 
-    public static double gateWait = 2.25;
-
     @Override
     public void onInit() {
         follower().setStartingPose(start);

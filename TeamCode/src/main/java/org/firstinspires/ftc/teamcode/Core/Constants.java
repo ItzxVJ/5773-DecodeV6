@@ -11,8 +11,8 @@ public class Constants {
     public static double gateBlock = 0.425;
     public static double gatePos;
 
-    public static double passIn = -1;
-    public static double passOut = 1;
+    public static double passIn = 1;
+    public static double passOut = -1;
     public static double passRest = 0;
     public static double interpolatedHoodPos;
     public static Pose redGoalPose = new Pose(76,-56);
@@ -37,4 +37,5 @@ public class Constants {
     public static double commandedRPM;
     public static double computedRPM;
     public static double shootWait = 1.75;
+    public static double gateWait = 1.75;
 }
