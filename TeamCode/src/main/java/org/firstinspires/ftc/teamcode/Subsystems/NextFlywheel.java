@@ -31,9 +31,7 @@ public class NextFlywheel implements Subsystem {
     public static double threshold = 30;
 
     public static double currentRPM = 0;
-    public static boolean chill;
     public static boolean stop;
-    public static boolean rev;
 
     @Override
     public void initialize() {
@@ -52,8 +50,13 @@ public class NextFlywheel implements Subsystem {
 
         double power = controller.update(commandedRPM, currentRPM, voltage);
 
-        shootL.setPower(power);
-        shootR.setPower(power);
+        if (stop) {
+            shootL.setPower(0);
+            shootR.setPower(0);
+        } else {
+            shootL.setPower(power);
+            shootR.setPower(power);
+        }
     }
 
     public double distanceTo(Pose target, Pose robot) {
@@ -95,25 +98,25 @@ public class NextFlywheel implements Subsystem {
 
     public Command run() {
         return new LambdaCommand()
-                .setStart(() -> {chill = false; stop = false; rev = false;})
-                .setUpdate(() -> commandedRPM = computedRPM)
-                .setIsDone(() -> (chill = true) || (stop = true) || (rev = true));
+                .setStart(() -> {stop = false;});
+//                .setUpdate(() -> commandedRPM = computedRPM)
+//                .setIsDone(() -> (chill = true) || (stop = true) || (rev = true));
     }
 
     public Command instantRun() {
-        return new InstantCommand(() -> commandedRPM = computedRPM);
+        return new InstantCommand(() -> {commandedRPM = computedRPM; stop = false;});
     }
 
     public Command rest() {
-        return new InstantCommand(() -> commandedRPM = restRPM);
+        return new InstantCommand(() -> {commandedRPM = restRPM; stop = false;});
     }
 
     public Command stop() {
-        return new InstantCommand(() -> commandedRPM = 0);
+        return new InstantCommand(() -> stop = true);
     }
 
     public Command rev() {
-        return new InstantCommand(() -> commandedRPM = 1000);
+        return new InstantCommand(() -> {commandedRPM = 1000; stop = false;});
     }
 
     public boolean isReady() {

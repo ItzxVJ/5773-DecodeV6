@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
@@ -24,6 +25,7 @@ public class ShootIntake extends LinearOpMode {
 
     FlywheelPIDFControl controller;
     FtcDashboard dashboard;
+    Servo gate;
 
     @Override
     public void runOpMode() {
@@ -35,6 +37,7 @@ public class ShootIntake extends LinearOpMode {
 
         shootL = hardwareMap.get(DcMotorEx.class, "leftFly");
         shootR = hardwareMap.get(DcMotorEx.class, "rightFly");
+        gate = hardwareMap.get(Servo.class, "gate");
         shootR.setDirection(DcMotorSimple.Direction.REVERSE);
 
         pass = hardwareMap.get(DcMotorEx.class, "pass");
@@ -69,11 +72,17 @@ public class ShootIntake extends LinearOpMode {
             /* ================= PASS / INTAKE ================= */
 
             if (gamepad1.a) {
-                pass.setPower(1.0);
+                pass.setPower(passIn);
             } else if (gamepad1.b) {
-                pass.setPower(-1.0);
+                pass.setPower(passOut);
             } else if (gamepad1.x) {
                 pass.setPower(0.0);
+            }
+            if (gamepad1.dpad_left) {
+                gate.setPosition(gateAllow);
+            }
+            if (gamepad1.dpad_right) {
+                gate.setPosition(gateBlock);
             }
 
             /* ================= DRIVER STATION TELEMETRY ================= */
