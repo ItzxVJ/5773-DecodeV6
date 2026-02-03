@@ -68,11 +68,11 @@ public class RedDualDrive extends NextFTCOpMode {
         driverControlled.schedule();
 
         Gamepads.gamepad2().rightBumper()
-                .whenTrue(NextPass.INSTANCE.intake)
-                .whenBecomesFalse(NextPass.INSTANCE.rest);
+                .whenTrue(new InstantCommand(() -> intakePower = passIn))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
         Gamepads.gamepad2().leftBumper()
-                .whenTrue(NextPass.INSTANCE.reverse)
-                .whenBecomesFalse(NextPass.INSTANCE.rest);
+                .whenTrue(new InstantCommand(() -> intakePower = passOut))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
         Gamepads.gamepad2().x()
                 .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
         Gamepads.gamepad2().a()
@@ -83,12 +83,12 @@ public class RedDualDrive extends NextFTCOpMode {
                                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
                                 NextFlywheel.INSTANCE.instantRun(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                NextPass.INSTANCE.intake,
+                                new InstantCommand(() -> intakePower = passIn),
                                 new InstantCommand(() -> gatePos = gateAllow),
                                 new Delay(shootWait),
                                 new InstantCommand(() -> gatePos = gateBlock),
                                 NextFlywheel.INSTANCE.rest(),
-                                NextPass.INSTANCE.rest
+                                new InstantCommand(() -> intakePower = passRest)
                         )
                 );
     }

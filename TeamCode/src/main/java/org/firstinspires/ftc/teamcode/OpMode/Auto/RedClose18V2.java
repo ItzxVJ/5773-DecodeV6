@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpMode.Auto;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.Core.Paths.BasicRedClose12.*;
+import static org.firstinspires.ftc.teamcode.Core.Paths.RedClose18.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -26,8 +26,8 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "RedClose12V4")
-public class RedClose12V4 extends NextFTCOpMode {
+@Autonomous(name = "RedClose18V2")
+public class RedClose18V2 extends NextFTCOpMode {
     {
         addComponents(
                 new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
@@ -41,13 +41,12 @@ public class RedClose12V4 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-
+                        new InstantCommand(() -> intakePower = passRest),
                         NextFlywheel.INSTANCE.stop(),
                         new SequentialGroup(
-                            NextTurret.INSTANCE.resetTurret(),
-                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
+                                NextTurret.INSTANCE.resetTurret(),
+                                NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
                         ),
-                        NextFlywheel.INSTANCE.stop(),
                         NextHood.INSTANCE.updateAngle()
                 )
         );
@@ -63,45 +62,73 @@ public class RedClose12V4 extends NextFTCOpMode {
                         new InstantCommand(() -> intakePower = passIn),
                         NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> firstShootPos),
                         NextFlywheel.INSTANCE.instantRun(),
-                        new FollowPath(firstShoot(follower())),
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(1.5),
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(firstPreIntake(follower())),
+                        new ParallelGroup(
+                            new FollowPath(firstShoot(follower())),
+                            new SequentialGroup(
+                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                                new Delay(0.75),
+                                new InstantCommand(() -> gatePos = gateAllow),
+                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateBlock),
+                                NextFlywheel.INSTANCE.rest()
+                            )
+                        ),
                         new FollowPath(firstIntake(follower())),
                         NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> secondShootPos),
                         NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(secondShoot(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(1.5),
+                        new Delay(shootWait),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(secondPreIntake(follower())),
                         new FollowPath(secondIntake(follower())),
+                        new Delay(0.2),
                         NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> thirdShootPos),
                         NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(thirdShoot(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(1.5),
+                        new Delay(shootWait),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(thirdPreIntake(follower())),
                         new FollowPath(thirdIntake(follower())),
+                        new Delay(gateWait),
                         NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> fourthShootPos),
                         NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(fourthShoot(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(1.5),
+                        new Delay(shootWait),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(park(follower()))
+                        new FollowPath(fourthIntake(follower())),
+                        new Delay(gateWait),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> fifthShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
+                        new FollowPath(fifthShoot(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                        new InstantCommand(() -> gatePos = gateAllow),
+                        new Delay(shootWait),
+                        new InstantCommand(() -> gatePos = gateBlock),
+                        NextFlywheel.INSTANCE.rest(),
+                        new FollowPath(fifthIntake(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> sixthShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
+                        new FollowPath(sixthShoot(follower())),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                        new InstantCommand(() -> gatePos = gateAllow),
+                        new Delay(shootWait),
+                        new InstantCommand(() -> gatePos = gateBlock),
+                        NextFlywheel.INSTANCE.stop(),
+                        new FollowPath(park(follower())),
+                        new InstantCommand(() -> intakePower = 0)
                 )
-
         );
     }
     @Override

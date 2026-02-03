@@ -69,11 +69,11 @@ public class NextFlywheel implements Subsystem {
     public static double flywheelSpeed(double dist) {
 
         return MathFunctions.clamp(
-                0.000010076 * Math.pow(dist, 4)
-                        - 0.00402775 * Math.pow(dist, 3)
-                        + 0.566131 * Math.pow(dist, 2)
-                        - 27.51827 * dist
-                        + 1226.37926,
+                -0.0000448751 * Math.pow(dist, 4)
+                        + 0.0173673 * Math.pow(dist, 3)
+                        - 2.40241 * Math.pow(dist, 2)
+                        + 146.22618 * dist
+                        - 2355.79014,
                 700, 1700
         );
 
@@ -101,6 +101,10 @@ public class NextFlywheel implements Subsystem {
                 .setStart(() -> {stop = false;});
 //                .setUpdate(() -> commandedRPM = computedRPM)
 //                .setIsDone(() -> (chill = true) || (stop = true) || (rev = true));
+    }
+
+    public Command testing() {
+        return new InstantCommand(() -> {commandedRPM = wanted; stop = false;});
     }
 
     public Command instantRun() {

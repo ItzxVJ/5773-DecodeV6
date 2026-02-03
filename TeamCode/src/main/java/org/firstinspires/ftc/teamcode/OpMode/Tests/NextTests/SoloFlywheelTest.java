@@ -17,19 +17,23 @@ import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
 import dev.nextftc.bindings.BindingManager;
 
+import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
+import dev.nextftc.core.commands.delays.Delay;
+import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.extensions.pedro.PedroDriverControlled;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "Empirical Test w/ Align")
+@TeleOp(name = "Empirical Testing w/ Auto Align")
 public class SoloFlywheelTest extends NextFTCOpMode {
     public SoloFlywheelTest() {
         addComponents(
@@ -48,8 +52,7 @@ public class SoloFlywheelTest extends NextFTCOpMode {
         dashboard = FtcDashboard.getInstance();
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        NextFlywheel.INSTANCE.stop(),
+                        new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
@@ -60,21 +63,38 @@ public class SoloFlywheelTest extends NextFTCOpMode {
     }
     @Override
     public void onStartButtonPressed() {
+        Command driverControlled = new PedroDriverControlled(
+                () -> (double) -ActiveOpMode.gamepad2().left_stick_y / 1.5,
+                () -> (double) -ActiveOpMode.gamepad2().left_stick_x / 1.5,
+                () -> (double) -ActiveOpMode.gamepad2().right_stick_x / 3,
+                true
+        );
 
-        Gamepads.gamepad1().rightBumper()
-                .whenTrue(NextPass.INSTANCE.intake)
-                .whenBecomesFalse(NextPass.INSTANCE.rest);
-        Gamepads.gamepad1().leftBumper()
-                .whenTrue(NextPass.INSTANCE.reverse)
-                .whenBecomesFalse(NextPass.INSTANCE.rest);
-        Gamepads.gamepad1().a()
-                .whenBecomesTrue(NextFlywheel.INSTANCE.run());
-        Gamepads.gamepad1().x()
-                .whenBecomesTrue(NextFlywheel.INSTANCE.stop());
-        Gamepads.gamepad1().dpadDown()
-                .whenBecomesTrue(() -> gatePos = gateBlock);
-        Gamepads.gamepad1().dpadUp()
-                .whenBecomesTrue(() -> gatePos = gateAllow);
+        driverControlled.schedule();
+
+        Gamepads.gamepad2().rightBumper()
+                .whenTrue(new InstantCommand(() -> intakePower = passIn))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+        Gamepads.gamepad2().leftBumper()
+                .whenTrue(new InstantCommand(() -> intakePower = passOut))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+        Gamepads.gamepad2().x()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
+        Gamepads.gamepad2().a()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rev());
+        Gamepads.gamepad2().b()
+                .whenBecomesTrue(
+                        new SequentialGroup(
+                                NextFlywheel.INSTANCE.testing(),
+                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                                new InstantCommand(() -> intakePower = passIn),
+                                new InstantCommand(() -> gatePos = gateAllow),
+                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateBlock),
+                                NextFlywheel.INSTANCE.rest(),
+                                new InstantCommand(() -> intakePower = passRest)
+                        )
+                );
     }
 
     @Override

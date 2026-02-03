@@ -10,21 +10,21 @@ public final class RedClose18 {
 
     /* ------------------ POSES ------------------ */
 
-    public static Pose start = new Pose(63.6, -39.3, -2.4);
+    public static Pose start = new Pose(63.72, -39, -2.38);
     public static Pose firstShootPos = new Pose(27.7, -19.9, -2.1);
     public static Pose intake1 = new Pose(20, -44, -1.7);
 
     public static Pose secondShootPos = new Pose(19.4, -13.4, -2.6);
-    public static Pose intake2 = new Pose(-8, -48, -1.6);
+    public static Pose intake2 = new Pose(-8, -51, -1.6);
 
     public static Pose thirdShootPos = new Pose(20.3, -13.2, -2);
-    public static Pose intake3 = new Pose(-3.6, -49.6, -1.2);
+    public static Pose intake3 = new Pose(-3.5, -54, -1.02);
 
     public static Pose fourthShootPos = thirdShootPos;
     public static Pose intake4 = intake3;
 
     public static Pose fifthShootPos = new Pose(16.1, -5.8, -2.7);
-    public static Pose intake5 = new Pose(-26.8, -39, -1.6);
+    public static Pose intake5 = new Pose(-26.8, -52, -1.6);
     public static Pose intake5Turn = new Pose(-26.8, -39, -2.5);
     public static Pose sixthShootPos = new Pose(18.8, -7.6, -2.5);
     public static Pose parkPos = new Pose(-12.3, -12.2, -2.5);
@@ -34,7 +34,7 @@ public final class RedClose18 {
 
     public static Pose pre1Control = new Pose(20.6, -28.4, -1.6);
     public static Pose pre2Control = new Pose(-9, -19.9, -2.1);
-    public static Pose pre5Control = new Pose(-43, -22.7, -2.3);
+    public static Pose pre5Control = new Pose(-43, -18, -2.3);
     public static Pose pre3ShootControl = new Pose(6.2, -25.5,-2.3);
     public static Pose pre4ShootControl = new Pose(2.5, -30.5, -2.1);
     public static Pose pre5ShootControl = pre4ShootControl;
@@ -101,6 +101,7 @@ public final class RedClose18 {
                         secondShootPos.getHeading(),
                         intake2.getHeading(), 0.5
                 )
+                .setVelocityConstraint(0.5)
                 .build();
     }
 

@@ -42,8 +42,8 @@ public class RedClose12V2 extends NextFTCOpMode {
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
 //                        NextTurret.INSTANCE.resetTurret(),
-                        NextFlywheel.INSTANCE.stop(),
-                        new InstantCommand(() -> hoodPos = hoodClosePos)
+                        NextFlywheel.INSTANCE.stop()
+                        //new InstantCommand(() -> hoodPos = hoodClosePos)
                 )
         );
     }
@@ -56,7 +56,7 @@ public class RedClose12V2 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new SequentialGroup(
 //                            NextTurret.INSTANCE.faceCommand(redGoalPose, follower().getPose()),
-                        NextPass.INSTANCE.intake,
+                        new InstantCommand(() -> intakePower = passIn),
                         //NextFlywheel.INSTANCE.runClose(),
                         new FollowPath(firstShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
