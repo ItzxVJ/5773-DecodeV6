@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@TeleOp(name = "Hood Test")
+@TeleOp(name = "HoodZero")
 public class Hood extends LinearOpMode {
 
     public static double hoodPos = 0;

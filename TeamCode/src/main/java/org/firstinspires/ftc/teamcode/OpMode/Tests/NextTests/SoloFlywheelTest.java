@@ -80,8 +80,6 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                 .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
         Gamepads.gamepad2().x()
                 .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
-    //        Gamepads.gamepad2().a()
-    //                .whenBecomesTrue(NextFlywheel.INSTANCE.rev());
         Gamepads.gamepad2().b()
                 .whenBecomesTrue(
                         new SequentialGroup(

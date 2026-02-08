@@ -52,8 +52,7 @@ public class RedSoloDrive extends NextFTCOpMode {
                             new InstantCommand(() -> turretIdle = true)
                         ),
                         NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
-                        NextFlywheel.INSTANCE.stop(),
-                        NextHood.INSTANCE.updateAngle()
+                        NextFlywheel.INSTANCE.stop()
                 )
         );
     }

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import java.util.function.Supplier;
 
+import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelLUT;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
 
 import dev.nextftc.core.commands.Command;
@@ -34,6 +35,7 @@ public class NextFlywheel implements Subsystem {
 
     private double cachedVoltage = 12.0;
     private double lastVoltageTime = 0;
+    FlywheelLUT.ShotData shot;
 
     @Override
     public void initialize() {
@@ -57,6 +59,7 @@ public class NextFlywheel implements Subsystem {
         }
 
         double power = controller.update(commandedRPM, currentRPM, cachedVoltage);
+        shot = lookup.getShotData(gDist);
 
         if (stop) {
             shootL.setPower(0);
@@ -96,7 +99,7 @@ public class NextFlywheel implements Subsystem {
         return new LambdaCommand()
                 .setUpdate(() -> {
                     gDist = distanceTo(target, robotPoseSupplier.get());
-                    computedRPM = flywheelSpeed(gDist);
+                    computedRPM = shot.rpm;
                 })
                 .setIsDone(() -> false);
     }

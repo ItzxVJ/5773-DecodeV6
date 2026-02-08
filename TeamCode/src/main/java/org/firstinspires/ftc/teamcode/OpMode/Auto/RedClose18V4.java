@@ -52,8 +52,7 @@ public class RedClose18V4 extends NextFTCOpMode {
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
-                        ),
-                        NextHood.INSTANCE.updateAngle()
+                        )
                 )
         );
     }

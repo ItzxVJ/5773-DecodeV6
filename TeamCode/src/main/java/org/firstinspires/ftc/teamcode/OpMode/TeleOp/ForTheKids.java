@@ -52,8 +52,7 @@ public class ForTheKids extends NextFTCOpMode {
                                 new InstantCommand(() -> turretIdle = false)
                         ),
                         NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
-                        NextFlywheel.INSTANCE.stop(),
-                        NextHood.INSTANCE.updateAngle()
+                        NextFlywheel.INSTANCE.stop()
                 )
         );
     }
