@@ -31,9 +31,9 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "RedSoloDrive")
-public class RedSoloDrive extends NextFTCOpMode {
-    public RedSoloDrive() {
+@TeleOp(name = "Community Event Close and Far")
+public class ForTheKids extends NextFTCOpMode {
+    public ForTheKids() {
         addComponents(
                 new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
@@ -48,8 +48,8 @@ public class RedSoloDrive extends NextFTCOpMode {
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
-                            NextTurret.INSTANCE.resetTurret(),
-                            new InstantCommand(() -> turretIdle = true)
+                                NextTurret.INSTANCE.resetTurret(),
+                                new InstantCommand(() -> turretIdle = false)
                         ),
                         NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
                         NextFlywheel.INSTANCE.stop(),
@@ -68,12 +68,11 @@ public class RedSoloDrive extends NextFTCOpMode {
 
         driverControlled.schedule();
 
-        Gamepads.gamepad1().rightTrigger()
-                .atLeast(0.2)
+        Gamepads.gamepad1().b()
                 .whenBecomesTrue(
                         new SequentialGroup(
                                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
-                                NextFlywheel.INSTANCE.instantRun(),
+                                NextFlywheel.INSTANCE.closeRev(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
                                 new InstantCommand(() -> intakePower = passIn),
                                 new InstantCommand(() -> gatePos = gateAllow),
@@ -82,6 +81,23 @@ public class RedSoloDrive extends NextFTCOpMode {
                                 new InstantCommand(() -> intakePower = passRest)
                         )
                 );
+
+        Gamepads.gamepad1().y()
+                .whenBecomesTrue(
+                        new SequentialGroup(
+                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                                NextFlywheel.INSTANCE.farRev(),
+                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                                new InstantCommand(() -> intakePower = passIn),
+                                new InstantCommand(() -> gatePos = gateAllow),
+                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateBlock),
+                                new InstantCommand(() -> intakePower = passRest)
+                        )
+                );
+
+        Gamepads.gamepad1().x()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
 
         Gamepads.gamepad1().leftTrigger()
                 .atLeast(0.2)

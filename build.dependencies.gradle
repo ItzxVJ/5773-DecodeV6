@@ -23,6 +23,6 @@ dependencies {
     implementation 'com.bylazar:fullpanels:1.0.9'
 
 
-    implementation 'com.acmerobotics.dashboard:dashboard:0.4.16' // Remove if you don't intend to use the FTC Dashboard (required if using PedroPathing)
+     // Remove if you don't intend to use the FTC Dashboard (required if using PedroPathing)
 }
 

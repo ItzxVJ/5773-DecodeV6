@@ -185,7 +185,7 @@ public class RedClose18V4 extends NextFTCOpMode {
 
                         /* ---------- PARK ---------- */
                         NextFlywheel.INSTANCE.stop(),
-                        new FollowPath(park(follower())),
+                        new FollowPath(lilPark(follower())),
                         new InstantCommand(() -> intakePower = 0)
                 )
         );

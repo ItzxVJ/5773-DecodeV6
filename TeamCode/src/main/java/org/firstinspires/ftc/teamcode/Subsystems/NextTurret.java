@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Core.Constants.*;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,21 +22,32 @@ public class NextTurret implements Subsystem {
     public static final NextTurret INSTANCE = new NextTurret();
     private NextTurret() {}
 
+    /* ---------------- Hardware ---------------- */
+
     private final MotorEx turret = new MotorEx("turret", -1)
             .floatMode();
 
+    /* ---------------- Constants ---------------- */
+
+    // radians per tick
     public static double rpt = 0.00376689766;
 
+    // encoder limits
     public static double lowLimit  = -683;
-    public static double highLimit = 683;
+    public static double highLimit =  683;
 
+    // control gains
     public static double kP = 0.0035;
     public static double kS = 0.1;
 
-    private double targetTicks = 0;
-    private double lastTime = 0;
+    /* ---------------- State ---------------- */
+
+    private double targetTicks = 0.0;
+    private double lastTime = 0.0;
 
     private final ElapsedTime timer = new ElapsedTime();
+
+    /* ---------------- Lifecycle ---------------- */
 
     @Override
     public void initialize() {
@@ -44,6 +57,8 @@ public class NextTurret implements Subsystem {
 
     @Override
     public void periodic() {
+        // Clamp target instead of wrapping
+        targetTicks = clamp(targetTicks, lowLimit, highLimit);
 
         double currentTicks = turret.getCurrentPosition();
         double error = targetTicks - currentTicks;
@@ -59,16 +74,22 @@ public class NextTurret implements Subsystem {
             power += Math.signum(error) * kS;
         }
 
-        turret.setPower(clamp(power, -1.0, 1.0));
+        if (!turretIdle) {
+            turret.setPower(clamp(power, -1.0, 1.0));
+        } else {
+            turret.setPower(0);
+        }
     }
 
+    /* ---------------- Yaw Control ---------------- */
+
     public void setYaw(double desiredYawRad) {
-        double currentYaw = getYaw();
-        double error = normalizeAngle(desiredYawRad - currentYaw);
+        double adjustedDesiredYaw = desiredYawRad + yawOffset;
 
-        double desiredTicks =
-                turret.getCurrentPosition() + (error / rpt);
+        // Convert desired yaw directly to encoder ticks
+        double desiredTicks = adjustedDesiredYaw / rpt;
 
+        // Clamp instead of wrap
         targetTicks = clamp(desiredTicks, lowLimit, highLimit);
     }
 
@@ -85,6 +106,8 @@ public class NextTurret implements Subsystem {
         setYaw(angleToTarget - robot.getHeading());
     }
 
+    /* ---------------- Commands ---------------- */
+
     public Command faceCommand(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new LambdaCommand()
                 .setUpdate(() -> face(target, robotPoseSupplier.get()))
@@ -96,16 +119,23 @@ public class NextTurret implements Subsystem {
             turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             turret.getMotor().setDirection(DcMotorSimple.Direction.REVERSE);
-            targetTicks = 0;
+            targetTicks = 0.0;
         });
     }
 
-    private static double normalizeAngle(double a) {
-        a %= (2 * Math.PI);
-        if (a <= -Math.PI) a += 2 * Math.PI;
-        if (a > Math.PI) a -= 2 * Math.PI;
-        return a;
+    public Command addYaw() {
+        return new InstantCommand(() -> yawOffset += yawStepRad);
     }
+
+    public Command decreaseYaw() {
+        return new InstantCommand(() -> yawOffset -= yawStepRad);
+    }
+
+    public Command resetYaw() {
+        return new InstantCommand(() -> yawOffset = 0.0);
+    }
+
+    /* ---------------- Helpers ---------------- */
 
     private static double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));

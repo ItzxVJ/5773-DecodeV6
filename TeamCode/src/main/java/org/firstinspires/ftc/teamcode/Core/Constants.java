@@ -25,8 +25,13 @@ public class Constants {
     public static double gDist;
     public static double commandedRPM;
     public static double computedRPM;
-    public static double shootWait = 0.8;
+    public static double shootWait = 1;
     public static double gateWait = 0.8;
     public static double intakePower;
     public static double wanted = 0;
+    public static double tConstraint = 0.7;
+    public static double brakingStrength = 1.6;
+    public static double yawOffset = 0;
+    public static double yawStepRad = 0.1;
+    public static boolean turretIdle = true;
 }

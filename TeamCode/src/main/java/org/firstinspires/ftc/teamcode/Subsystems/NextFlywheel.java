@@ -119,7 +119,11 @@ public class NextFlywheel implements Subsystem {
         return new InstantCommand(() -> stop = true);
     }
 
-    public Command rev() {
+    public Command farRev() {
+        return new InstantCommand(() -> { commandedRPM = 1800; stop = false; });
+    }
+
+    public Command closeRev() {
         return new InstantCommand(() -> {commandedRPM = 1000; stop = false;});
     }
 
