@@ -37,12 +37,17 @@ public class NextTurret implements Subsystem {
     public static double highLimit =  683;
 
     // control gains
-    public static double kP = 0.0035;
-    public static double kS = 0.1;
+    public static double kP = 0.004;
+    public static double kD = 0.0008;
+    public static double kS = 0.08;
+
+    // tolerances
+    public static double toleranceTicks = 2.0;
 
     /* ---------------- State ---------------- */
 
     private double targetTicks = 0.0;
+    private double lastError = 0.0;
     private double lastTime = 0.0;
 
     private final ElapsedTime timer = new ElapsedTime();
@@ -57,44 +62,50 @@ public class NextTurret implements Subsystem {
 
     @Override
     public void periodic() {
-        // Clamp target instead of wrapping
-        targetTicks = clamp(targetTicks, lowLimit, highLimit);
-
-        double currentTicks = turret.getCurrentPosition();
-        double error = targetTicks - currentTicks;
 
         double now = timer.seconds();
         double dt = now - lastTime;
         lastTime = now;
         if (dt <= 0) return;
 
-        double power = kP * error;
+        targetTicks = clamp(targetTicks, lowLimit, highLimit);
 
-        if (Math.abs(error) > 1) {
-            power += Math.signum(error) * kS;
-        }
+        double currentTicks = turret.getCurrentPosition();
+        double error = targetTicks - currentTicks;
 
-        if (!turretIdle) {
-            turret.setPower(clamp(power, -1.0, 1.0));
-        } else {
+        // Deadband / lock
+        if (Math.abs(error) <= toleranceTicks) {
             turret.setPower(0);
+            lastError = error;
+            return;
         }
+
+        // PD control
+        double derivative = (error - lastError) / dt;
+        lastError = error;
+
+        double power = (kP * error) - (kD * derivative);
+
+        // Static friction
+        power += Math.signum(error) * kS;
+
+        // Prevent pushing into limits
+        boolean pushingLower = currentTicks <= lowLimit + 2 && power < 0;
+        boolean pushingUpper = currentTicks >= highLimit - 2 && power > 0;
+
+        if (pushingLower || pushingUpper) {
+            power = 0;
+        }
+
+        turret.setPower(clamp(power, -1.0, 1.0));
     }
 
     /* ---------------- Yaw Control ---------------- */
 
     public void setYaw(double desiredYawRad) {
         double adjustedDesiredYaw = desiredYawRad + yawOffset;
-
-        // Convert desired yaw directly to encoder ticks
         double desiredTicks = adjustedDesiredYaw / rpt;
-
-        // Clamp instead of wrap
         targetTicks = clamp(desiredTicks, lowLimit, highLimit);
-    }
-
-    public double getYaw() {
-        return turret.getCurrentPosition() * rpt;
     }
 
     public void face(Pose target, Pose robot) {
@@ -120,6 +131,7 @@ public class NextTurret implements Subsystem {
             turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             turret.getMotor().setDirection(DcMotorSimple.Direction.REVERSE);
             targetTicks = 0.0;
+            lastError = 0.0;
         });
     }
 

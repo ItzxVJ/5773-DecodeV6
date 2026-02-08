@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
 
 import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.commands.utility.LambdaCommand;
 import dev.nextftc.core.subsystems.Subsystem;
@@ -33,6 +32,9 @@ public class NextFlywheel implements Subsystem {
     public static double currentRPM = 0;
     public static boolean stop;
 
+    private double cachedVoltage = 12.0;
+    private double lastVoltageTime = 0;
+
     @Override
     public void initialize() {
         controller = new FlywheelPIDFControl(ActiveOpMode.hardwareMap());
@@ -46,9 +48,15 @@ public class NextFlywheel implements Subsystem {
         controller.setPIDF(skS, skV, skP, skI, skD);
 
         currentRPM = Math.abs(shootR.getVelocity());
-        double voltage = getBatteryVoltage();
 
-        double power = controller.update(commandedRPM, currentRPM, voltage);
+        // Cache voltage (does not need to update every loop)
+        double now = System.nanoTime() / 1e9;
+        if (now - lastVoltageTime > 0.1) {
+            cachedVoltage = getBatteryVoltage();
+            lastVoltageTime = now;
+        }
+
+        double power = controller.update(commandedRPM, currentRPM, cachedVoltage);
 
         if (stop) {
             shootL.setPower(0);
@@ -67,7 +75,6 @@ public class NextFlywheel implements Subsystem {
     }
 
     public static double flywheelSpeed(double dist) {
-
         return MathFunctions.clamp(
                 -0.0000448751 * Math.pow(dist, 4)
                         + 0.0173673 * Math.pow(dist, 3)
@@ -76,16 +83,14 @@ public class NextFlywheel implements Subsystem {
                         - 2355.79014,
                 700, 1700
         );
-
     }
 
     public Command calcRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new InstantCommand(() -> {
-            gDist  = distanceTo(target, robotPoseSupplier.get());
+            gDist = distanceTo(target, robotPoseSupplier.get());
             computedRPM = flywheelSpeed(gDist);
         });
     }
-
 
     public Command updateDistanceRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new LambdaCommand()
@@ -98,21 +103,28 @@ public class NextFlywheel implements Subsystem {
 
     public Command run() {
         return new LambdaCommand()
-                .setStart(() -> {stop = false;});
-//                .setUpdate(() -> commandedRPM = computedRPM)
-//                .setIsDone(() -> (chill = true) || (stop = true) || (rev = true));
+                .setStart(() -> stop = false);
     }
 
     public Command testing() {
-        return new InstantCommand(() -> {commandedRPM = wanted; stop = false;});
+        return new InstantCommand(() -> {
+            commandedRPM = wanted;
+            stop = false;
+        });
     }
 
     public Command instantRun() {
-        return new InstantCommand(() -> {commandedRPM = computedRPM; stop = false;});
+        return new InstantCommand(() -> {
+            commandedRPM = computedRPM;
+            stop = false;
+        });
     }
 
     public Command rest() {
-        return new InstantCommand(() -> {commandedRPM = restRPM; stop = false;});
+        return new InstantCommand(() -> {
+            commandedRPM = restRPM;
+            stop = false;
+        });
     }
 
     public Command stop() {
@@ -120,18 +132,23 @@ public class NextFlywheel implements Subsystem {
     }
 
     public Command farRev() {
-        return new InstantCommand(() -> { commandedRPM = 1800; stop = false; });
+        return new InstantCommand(() -> {
+            commandedRPM = 1800;
+            stop = false;
+        });
     }
 
     public Command closeRev() {
-        return new InstantCommand(() -> {commandedRPM = 1000; stop = false;});
+        return new InstantCommand(() -> {
+            commandedRPM = 1000;
+            stop = false;
+        });
     }
 
     public boolean isReady() {
-        return currentRPM >= commandedRPM - threshold &&
-                currentRPM <= commandedRPM + threshold;
+        return Math.abs(currentRPM - commandedRPM) <= threshold
+                && Math.abs(controller.getFilteredDerivative()) < 50;
     }
-
 
     private double getBatteryVoltage() {
         double minVoltage = 14.0;
