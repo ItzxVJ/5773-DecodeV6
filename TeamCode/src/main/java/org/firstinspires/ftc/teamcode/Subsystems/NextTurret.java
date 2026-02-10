@@ -24,29 +24,31 @@ public class NextTurret implements Subsystem {
 
     /* ---------------- Hardware ---------------- */
 
-    private final MotorEx turret = new MotorEx("turret", -1)
-            .floatMode();
+    private final MotorEx turret = new MotorEx("turret", -1);
 
-    /* ---------------- Constants ---------------- */
-
-    // radians per tick
-    public static double rpt = 0.00376689766;
+    // radians per encoder tick
+    public static double rpt = 0.00367437737;
 
     // encoder limits
     public static double lowLimit  = -683;
     public static double highLimit =  683;
 
-    // control gains
-    public static double kP = 0.004;
-    public static double kD = 0.0008;
-    public static double kS = 0.08;
+    public static double kP = 0.01;
+    public static double kD = 0.0003;
+    public static double kS = 0.15;     // static friction
+    public static double minPower = 0.05;
 
     // tolerances
-    public static double toleranceTicks = 2.0;
+    public static double toleranceTicks = 2;
+
+    // target smoothing
+    public static double targetAlpha = 0.25;
 
     /* ---------------- State ---------------- */
 
     private double targetTicks = 0.0;
+    private double filteredTargetTicks = 0.0;
+
     private double lastError = 0.0;
     private double lastTime = 0.0;
 
@@ -58,6 +60,10 @@ public class NextTurret implements Subsystem {
     public void initialize() {
         timer.reset();
         lastTime = timer.seconds();
+
+        turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turret.getMotor().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turret.getMotor().setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -66,32 +72,42 @@ public class NextTurret implements Subsystem {
         double now = timer.seconds();
         double dt = now - lastTime;
         lastTime = now;
-        if (dt <= 0) return;
+
+        dt = Math.max(0.001, Math.min(dt, 0.05));
 
         targetTicks = clamp(targetTicks, lowLimit, highLimit);
 
         double currentTicks = turret.getCurrentPosition();
-        double error = targetTicks - currentTicks;
+        double rawError = targetTicks - currentTicks;
 
-        // Deadband / lock
-        if (Math.abs(error) <= toleranceTicks) {
-            turret.setPower(0);
-            lastError = error;
-            return;
+        if (Math.abs(rawError) < 30) {
+            filteredTargetTicks = targetTicks;
+        } else {
+            filteredTargetTicks =
+                    (1.0 - targetAlpha) * filteredTargetTicks +
+                            targetAlpha * targetTicks;
         }
 
-        // PD control
+        double error = filteredTargetTicks - currentTicks;
+
         double derivative = (error - lastError) / dt;
         lastError = error;
 
-        double power = (kP * error) - (kD * derivative);
+        double power = (kP * error) + (kD * derivative);
 
-        // Static friction
+        if (Math.abs(error) <= toleranceTicks) {
+            turret.setPower(0);
+            return;
+        }
+
         power += Math.signum(error) * kS;
 
-        // Prevent pushing into limits
-        boolean pushingLower = currentTicks <= lowLimit + 2 && power < 0;
-        boolean pushingUpper = currentTicks >= highLimit - 2 && power > 0;
+        if (Math.abs(power) < minPower) {
+            power = Math.signum(power) * minPower;
+        }
+
+        boolean pushingLower = currentTicks <= lowLimit + 3 && power < 0;
+        boolean pushingUpper = currentTicks >= highLimit - 3 && power > 0;
 
         if (pushingLower || pushingUpper) {
             power = 0;
@@ -103,9 +119,8 @@ public class NextTurret implements Subsystem {
     /* ---------------- Yaw Control ---------------- */
 
     public void setYaw(double desiredYawRad) {
-        double adjustedDesiredYaw = desiredYawRad + yawOffset;
-        double desiredTicks = adjustedDesiredYaw / rpt;
-        targetTicks = clamp(desiredTicks, lowLimit, highLimit);
+        double adjustedYaw = desiredYawRad + yawOffset;
+        targetTicks = clamp(adjustedYaw / rpt, lowLimit, highLimit);
     }
 
     public void face(Pose target, Pose robot) {
@@ -129,8 +144,8 @@ public class NextTurret implements Subsystem {
         return new InstantCommand(() -> {
             turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            turret.getMotor().setDirection(DcMotorSimple.Direction.REVERSE);
             targetTicks = 0.0;
+            filteredTargetTicks = 0.0;
             lastError = 0.0;
         });
     }

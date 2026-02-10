@@ -23,14 +23,14 @@ public class Turret extends LinearOpMode {
     public static double kP = 0.00;
     public static double kD = 0.000;
 
-    public static double sP = 0.005;
-    public static double sD = 0.0001;
+    public static double sP = 0;
+    public static double sD = 0;
 
     // static friction compensation
     public static double kS = 0.1;
 
     // error threshold (ticks) for coarse vs fine PID
-    public static double pidSwitchTicks = 30;
+    public static double pidSwitchTicks = 5;
 
     /* ---------- SOFT LIMITS (ENCODER TICKS) ---------- */
 

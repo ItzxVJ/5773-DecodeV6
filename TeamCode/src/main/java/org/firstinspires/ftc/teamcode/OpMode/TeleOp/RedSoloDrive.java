@@ -49,7 +49,7 @@ public class RedSoloDrive extends NextFTCOpMode {
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                             NextTurret.INSTANCE.resetTurret(),
-                            new InstantCommand(() -> turretIdle = true)
+                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
                         ),
                         NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
                         NextFlywheel.INSTANCE.stop()
@@ -75,8 +75,11 @@ public class RedSoloDrive extends NextFTCOpMode {
                                 NextFlywheel.INSTANCE.instantRun(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
                                 new InstantCommand(() -> intakePower = passIn),
-                                new InstantCommand(() -> gatePos = gateAllow),
-                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateAllow)
+                        )
+                )
+                .whenBecomesFalse(
+                        new ParallelGroup(
                                 new InstantCommand(() -> gatePos = gateBlock),
                                 new InstantCommand(() -> intakePower = passRest)
                         )

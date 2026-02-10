@@ -7,9 +7,9 @@ import java.util.List;
 public class FlywheelLUT {
     
     public static class ShotData {
-        public double distance; // meters
+        public double distance; // inches
         public double rpm;      // flywheel RPM
-        public double hood;     // hood angle in radians
+        public double hood;     // hood position
 
         public ShotData(double distance, double rpm, double hood) {
             this.distance = distance;
@@ -21,13 +21,12 @@ public class FlywheelLUT {
     private final List<ShotData> table = new ArrayList<>();
 
     public FlywheelLUT() {
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
-        table.add(new ShotData(0, 0, 0));
+        table.add(new ShotData(52.9, 875, 0.42));
+        table.add(new ShotData(71.8, 1000, 0.33));
+        table.add(new ShotData(89.8, 1050, 0.23));
+        table.add(new ShotData(113.4, 1250, 0.15));
+        table.add(new ShotData(129, 1375, 0.1));
+        table.add(new ShotData(143.5, 1450, 0.05));
 
     }
 

@@ -15,6 +15,7 @@ public class NextHood implements Subsystem {
 
     @Override
     public void initialize() {
+        shot = lookup.getShotData(gDist);
         leftHood.setPosition(shot.hood);
     }
 
@@ -23,4 +24,7 @@ public class NextHood implements Subsystem {
         shot = lookup.getShotData(gDist);
         leftHood.setPosition(shot.hood);
     }
+
+
 }
+

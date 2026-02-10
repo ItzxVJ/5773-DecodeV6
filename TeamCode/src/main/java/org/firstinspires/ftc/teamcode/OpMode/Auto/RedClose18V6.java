@@ -28,8 +28,8 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "RedClose18V5")
-public class RedClose18V5 extends NextFTCOpMode {
+@Autonomous(name = "RedClose18V6")
+public class RedClose18V6 extends NextFTCOpMode {
     {
         addComponents(
                 BulkReadComponent.INSTANCE,

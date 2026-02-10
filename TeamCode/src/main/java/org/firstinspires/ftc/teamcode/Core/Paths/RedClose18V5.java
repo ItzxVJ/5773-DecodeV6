@@ -59,7 +59,7 @@ public class RedClose18V5 {
                         intake1.getHeading(),
                         0.15
                 )
-                .setTValueConstraint(0.6)
+                .setTValueConstraint(0.4)
                 .setBrakingStrength(brakingStrength)
                 .build();
     }
@@ -84,15 +84,14 @@ public class RedClose18V5 {
 
     public static PathChain secondShoot(Follower f) {
         return f.pathBuilder()
-                .addPath(new BezierCurve(
+                .addPath(new BezierLine(
                         intake1,
-                        secondShootControl,
                         secondShootPos
                 ))
                 .setLinearHeadingInterpolation(
                         intake1.getHeading(),
                         secondShootPos.getHeading(),
-                        0.3
+                        0.1
                 )
                 .setBrakingStrength(brakingStrength)
                 .setTValueConstraint(tConstraint)

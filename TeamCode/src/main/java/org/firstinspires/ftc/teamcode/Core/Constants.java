@@ -23,7 +23,7 @@ public class Constants {
     public static double restRPM = 200;
 
     public static double hoodPos;
-    public static double skP = 0.13, skI, skD, skV = 0.004, skS = 3.3;
+    public static double skP = 0.15, skI, skD, skV = 0.004, skS = 2;
     public static double gDist;
     public static double commandedRPM;
     public static double computedRPM;

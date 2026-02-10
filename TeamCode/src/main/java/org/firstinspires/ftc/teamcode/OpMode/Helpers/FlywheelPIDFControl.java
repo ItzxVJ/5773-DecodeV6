@@ -7,12 +7,13 @@ public class FlywheelPIDFControl {
     private double kS, kV;
     private double kP, kI, kD;
 
-    private static final double maxIntegral = 500;
-    private static final double dAlpha = 0.85;
+    private static final double MAX_INTEGRAL = 500;
+    private static final double D_ALPHA = 0.85;
+    private static final double kA = 0.0002;
 
     private double integral = 0;
     private double lastError = 0;
-    private double lastTime = 0;
+    private double lastTime;
     private double lastTargetRPM = 0;
     private double filteredDerivative = 0;
 
@@ -34,41 +35,31 @@ public class FlywheelPIDFControl {
         double dt = currentTime - lastTime;
         if (dt <= 0 || dt > 0.1) dt = 0.02;
 
-        // Reset integral if target jumps
         if (Math.abs(targetRPM - lastTargetRPM) > 50) {
             integral = 0;
         }
 
         double error = targetRPM - currentRPM;
 
-        // Integral with clamp
         integral += error * dt;
-        integral = Math.max(-maxIntegral, Math.min(maxIntegral, integral));
+        integral = Math.max(-MAX_INTEGRAL, Math.min(MAX_INTEGRAL, integral));
 
-        // Derivative (filtered)
         double rawDerivative = (error - lastError) / dt;
-        filteredDerivative = dAlpha * filteredDerivative + (1 - dAlpha) * rawDerivative;
+        filteredDerivative = D_ALPHA * filteredDerivative + (1 - D_ALPHA) * rawDerivative;
 
-        // PID
         double pid =
                 (kP * error) +
                         (kI * integral) +
                         (kD * filteredDerivative);
 
-        // Acceleration feedforward
         double accel = (targetRPM - lastTargetRPM) / dt;
 
-        // Added (required for stability)
-        // accel feedforward
-        double kA = 0.0002;
         double feedforward =
                 (kS * Math.signum(targetRPM)) +
                         (kV * targetRPM) +
                         (kA * accel);
 
-        double voltage = pid + feedforward;
-        double power = voltage / batteryVoltage;
-
+        double power = (pid + feedforward) / batteryVoltage;
         power = Math.max(-1.0, Math.min(1.0, power));
 
         lastError = error;
@@ -78,7 +69,6 @@ public class FlywheelPIDFControl {
         return power;
     }
 
-    // Optional but useful for readiness checks
     public double getFilteredDerivative() {
         return filteredDerivative;
     }

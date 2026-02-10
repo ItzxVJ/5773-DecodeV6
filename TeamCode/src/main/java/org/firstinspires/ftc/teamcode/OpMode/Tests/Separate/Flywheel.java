@@ -14,64 +14,82 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.teamcode.OpMode.Helpers.FlywheelPIDFControl;
 
 @Config
-@TeleOp(name = "Flywheel Test")
+@TeleOp(name = "Flywheel PIDFVS Test", group = "Testing")
 public class Flywheel extends LinearOpMode {
 
-    DcMotorEx shootL, shootR;
-    FlywheelPIDFControl controller;
-
-
-
-    FtcDashboard dashboard;
+    public static double targetRPM = 0;
 
     @Override
     public void runOpMode() {
 
-        dashboard = FtcDashboard.getInstance();
+        /* ===== Dashboard ===== */
+        FtcDashboard dashboard = FtcDashboard.getInstance();
 
-        controller = new FlywheelPIDFControl(hardwareMap);
+        /* ===== Controller ===== */
+        FlywheelPIDFControl controller = new FlywheelPIDFControl(hardwareMap);
 
-        shootL = hardwareMap.get(DcMotorEx.class, "leftFly");
-        shootR = hardwareMap.get(DcMotorEx.class, "rightFly");
+        /* ===== Motors ===== */
+        DcMotorEx shootL = hardwareMap.get(DcMotorEx.class, "leftFly");
+        DcMotorEx shootR = hardwareMap.get(DcMotorEx.class, "rightFly");
+
         shootR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        shootL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        shootR.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         waitForStart();
 
         while (opModeIsActive()) {
 
+            /* ===== Push global PIDF into controller ===== */
             controller.setPIDF(skS, skV, skP, skI, skD);
 
-            double currentRPM =
-                    Math.abs(shootR.getVelocity());
+            /* ===== Measure RPM (match subsystem) ===== */
+            double currentRPM = Math.abs(shootR.getVelocity());
 
+            /* ===== Battery voltage ===== */
             double batteryVoltage = getBatteryVoltage();
-            double power = controller.update(targetRPM, currentRPM, batteryVoltage);
-            double error = targetRPM - currentRPM;
 
+            /* ===== Compute power ===== */
+            double power = controller.update(
+                    targetRPM,
+                    currentRPM,
+                    batteryVoltage
+            );
+
+            /* ===== Apply power ===== */
             shootL.setPower(power);
             shootR.setPower(power);
 
-            telemetry.addLine("Flywheel Status");
-            telemetry.addData("Target Velocity", targetRPM);
-            telemetry.addData("Interpolated RPM", interpolatedTargetRPM);
+            /* ===== Error ===== */
+            double error = targetRPM - currentRPM;
+
+            /* ===== Driver Station Telemetry ===== */
+            telemetry.addLine("Flywheel PIDF Test");
+            telemetry.addData("Target RPM", targetRPM);
             telemetry.addData("Current RPM", currentRPM);
             telemetry.addData("Error", error);
-            telemetry.addData("Battery Voltage", batteryVoltage);
             telemetry.addData("Motor Power", power);
+            telemetry.addData("Battery Voltage", batteryVoltage);
             telemetry.update();
 
+            /* ===== Dashboard Telemetry ===== */
             TelemetryPacket packet = new TelemetryPacket();
             packet.put("Target RPM", targetRPM);
             packet.put("Current RPM", currentRPM);
             packet.put("Error", error);
-            packet.put("Battery Voltage", batteryVoltage);
             packet.put("Motor Power", power);
+            packet.put("Battery Voltage", batteryVoltage);
 
             dashboard.sendTelemetryPacket(packet);
         }
+
+        /* ===== Stop motors on exit ===== */
+        shootL.setPower(0);
+        shootR.setPower(0);
     }
 
-    public double getBatteryVoltage() {
+    private double getBatteryVoltage() {
         double minVoltage = 14.0;
         for (VoltageSensor sensor : hardwareMap.getAll(VoltageSensor.class)) {
             minVoltage = Math.min(minVoltage, sensor.getVoltage());
