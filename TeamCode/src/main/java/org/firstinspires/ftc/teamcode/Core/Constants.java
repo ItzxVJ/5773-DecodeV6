@@ -27,7 +27,8 @@ public class Constants {
     public static double gDist;
     public static double commandedRPM;
     public static double computedRPM;
-    public static double shootWait = 1;
+    public static double shootWait = 0.7;
+    public static double shootWaitGateClose = 0.3;
     public static double gateWait = 0.8;
     public static double intakePower;
     public static double wanted = 0;
