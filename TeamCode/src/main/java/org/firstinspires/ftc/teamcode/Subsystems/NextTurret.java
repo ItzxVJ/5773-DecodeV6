@@ -22,29 +22,25 @@ public class NextTurret implements Subsystem {
     public static final NextTurret INSTANCE = new NextTurret();
     private NextTurret() {}
 
-    /* ---------------- Hardware ---------------- */
-
     private final MotorEx turret = new MotorEx("turret", -1);
 
-    // radians per encoder tick
     public static double rpt = 0.00367437737;
 
-    // encoder limits
     public static double lowLimit  = -683;
     public static double highLimit =  683;
 
     public static double kP = 0.01;
     public static double kD = 0.0003;
-    public static double kS = 0.15;     // static friction
+    public static double kS = 0.15;
     public static double minPower = 0.05;
 
-    // tolerances
+    public static double finekP = 0.004;
+    public static double finekD = 0.0001;
+
+    public static double fineZoneTicks = 40;
     public static double toleranceTicks = 2;
 
-    // target smoothing
     public static double targetAlpha = 0.25;
-
-    /* ---------------- State ---------------- */
 
     private double targetTicks = 0.0;
     private double filteredTargetTicks = 0.0;
@@ -53,8 +49,6 @@ public class NextTurret implements Subsystem {
     private double lastTime = 0.0;
 
     private final ElapsedTime timer = new ElapsedTime();
-
-    /* ---------------- Lifecycle ---------------- */
 
     @Override
     public void initialize() {
@@ -93,14 +87,24 @@ public class NextTurret implements Subsystem {
         double derivative = (error - lastError) / dt;
         lastError = error;
 
-        double power = (kP * error) + (kD * derivative);
+        double coarseOutput = (kP * error) + (kD * derivative);
 
-        if (Math.abs(error) <= toleranceTicks) {
-            turret.setPower(0);
-            return;
+        double fineOutput = (finekP * error) + (finekD * derivative);
+
+        double blend;
+        if (Math.abs(error) >= fineZoneTicks) {
+            blend = 1.0;
+        } else {
+            blend = Math.abs(error) / fineZoneTicks;
         }
 
-        power += Math.signum(error) * kS;
+        double power =
+                (blend * coarseOutput) +
+                        ((1.0 - blend) * fineOutput);
+
+        if (Math.abs(error) > toleranceTicks) {
+            power += Math.signum(error) * kS;
+        }
 
         if (Math.abs(power) < minPower) {
             power = Math.signum(power) * minPower;
@@ -116,8 +120,6 @@ public class NextTurret implements Subsystem {
         turret.setPower(clamp(power, -1.0, 1.0));
     }
 
-    /* ---------------- Yaw Control ---------------- */
-
     public void setYaw(double desiredYawRad) {
         double adjustedYaw = desiredYawRad + yawOffset;
         targetTicks = clamp(adjustedYaw / rpt, lowLimit, highLimit);
@@ -131,8 +133,6 @@ public class NextTurret implements Subsystem {
 
         setYaw(angleToTarget - robot.getHeading());
     }
-
-    /* ---------------- Commands ---------------- */
 
     public Command faceCommand(Pose target, Supplier<Pose> robotPoseSupplier) {
         return new LambdaCommand()
@@ -161,9 +161,6 @@ public class NextTurret implements Subsystem {
     public Command resetYaw() {
         return new InstantCommand(() -> yawOffset = 0.0);
     }
-
-    /* ---------------- Helpers ---------------- */
-
     private static double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
     }

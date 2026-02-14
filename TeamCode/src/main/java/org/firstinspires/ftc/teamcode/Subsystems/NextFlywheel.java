@@ -95,7 +95,7 @@ public class NextFlywheel implements Subsystem {
         });
     }
 
-    public Command updateDistanceRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
+    public Command updateDistanceRPM(Pose target, Supplier<Pose> robotPoseSupplier) { 
         return new LambdaCommand()
                 .setUpdate(() -> {
                     gDist = distanceTo(target, robotPoseSupplier.get());

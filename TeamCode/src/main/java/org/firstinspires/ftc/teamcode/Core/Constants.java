@@ -23,12 +23,12 @@ public class Constants {
     public static double restRPM = 200;
 
     public static double hoodPos;
-    public static double skP = 0.15, skI, skD, skV = 0.004, skS = 2;
+    public static double skP = 0.03, skI, skD, skV = 0.0055, skS = 1.3;
     public static double gDist;
     public static double commandedRPM;
     public static double computedRPM;
     public static double shootWait = 0.7;
-    public static double shootWaitGateClose = 0.3;
+    public static double shootWaitGateClose = 0.5;
     public static double gateWait = 0.8;
     public static double intakePower;
     public static double wanted = 0;

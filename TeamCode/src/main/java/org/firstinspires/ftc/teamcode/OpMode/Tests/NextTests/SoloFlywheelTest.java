@@ -4,8 +4,6 @@ import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
@@ -19,7 +17,6 @@ import dev.nextftc.bindings.BindingManager;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
-import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -33,7 +30,7 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "Empirical Testing w/ Auto Align")
+@TeleOp(name = "Ishaan Ashok")
 public class SoloFlywheelTest extends NextFTCOpMode {
     public SoloFlywheelTest() {
         addComponents(
@@ -43,13 +40,9 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                 BindingsComponent.INSTANCE
         );
     }
-
-    FtcDashboard dashboard;
-
     @Override
     public void onInit() {
         follower().setStartingPose(lastPose);
-        dashboard = FtcDashboard.getInstance();
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
@@ -57,42 +50,60 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose())
+                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
+                        NextFlywheel.INSTANCE.stop()
                 )
         );
     }
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad2().left_stick_y / 1.5,
-                () -> (double) -ActiveOpMode.gamepad2().left_stick_x / 1.5,
-                () -> (double) -ActiveOpMode.gamepad2().right_stick_x / 3,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y / 1.5,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x / 1.5,
+                () -> (double) -ActiveOpMode.gamepad1().right_stick_x / 3,
                 true
         );
 
         driverControlled.schedule();
 
-        Gamepads.gamepad2().rightBumper()
-                .whenTrue(new InstantCommand(() -> intakePower = passIn))
-                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
-        Gamepads.gamepad2().leftBumper()
-                .whenTrue(new InstantCommand(() -> intakePower = passOut))
-                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
-        Gamepads.gamepad2().x()
-                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
-        Gamepads.gamepad2().b()
+        Gamepads.gamepad1().rightTrigger()
+                .atLeast(0.2)
                 .whenBecomesTrue(
                         new SequentialGroup(
                                 NextFlywheel.INSTANCE.testing(),
                                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
                                 new InstantCommand(() -> intakePower = passIn),
-                                new InstantCommand(() -> gatePos = gateAllow),
-                                new Delay(shootWait),
+                                new InstantCommand(() -> gatePos = gateAllow)
+                        )
+                )
+                .whenBecomesFalse(
+                        new ParallelGroup(
                                 new InstantCommand(() -> gatePos = gateBlock),
-                                NextFlywheel.INSTANCE.rest(),
                                 new InstantCommand(() -> intakePower = passRest)
                         )
                 );
+
+        Gamepads.gamepad1().leftTrigger()
+                .atLeast(0.2)
+                .whenBecomesTrue(
+                        NextFlywheel.INSTANCE.farRev()
+                );
+
+        Gamepads.gamepad1().rightBumper()
+                .whenTrue(new InstantCommand(() -> intakePower = passIn))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+        Gamepads.gamepad1().leftBumper()
+                .whenTrue(new InstantCommand(() -> intakePower = passOut))
+                .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+        Gamepads.gamepad1().dpadRight()
+                .whenBecomesTrue(NextTurret.INSTANCE.addYaw());
+        Gamepads.gamepad1().dpadLeft()
+                .whenBecomesTrue(NextTurret.INSTANCE.decreaseYaw());
+        Gamepads.gamepad1().dpadDown()
+                .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
+        Gamepads.gamepad1().x()
+                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
+
     }
 
     @Override
@@ -102,15 +113,9 @@ public class SoloFlywheelTest extends NextFTCOpMode {
         ActiveOpMode.telemetry().addData("Distance", gDist);
         ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
         ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
-        ActiveOpMode.telemetry().addData("Current RPM", NextFlywheel.currentRPM);
+        ActiveOpMode.telemetry().addData("Turret Offset", yawOffset);
+        ActiveOpMode.telemetry().addLine("good luck gang don't get cooked");
         ActiveOpMode.telemetry().update();
-
-        TelemetryPacket packet = new TelemetryPacket();
-        packet.put("Target RPM", targetRPM);
-        packet.put("Current RPM", NextFlywheel.currentRPM);
-        packet.put("Error", targetRPM - NextFlywheel.currentRPM);
-
-        dashboard.sendTelemetryPacket(packet);
 
     }
 
