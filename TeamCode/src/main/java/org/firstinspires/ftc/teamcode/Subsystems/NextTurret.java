@@ -26,8 +26,8 @@ public class NextTurret implements Subsystem {
 
     public static double rpt = 0.00367437737;
 
-    public static double lowLimit  = -683;
-    public static double highLimit =  683;
+    public static double lowLimit  = -750;
+    public static double highLimit =  750;
 
     public static double kP = 0.01;
     public static double kD = 0.0003;

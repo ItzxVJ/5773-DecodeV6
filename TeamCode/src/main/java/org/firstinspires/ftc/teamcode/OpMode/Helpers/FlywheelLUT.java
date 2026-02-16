@@ -21,15 +21,13 @@ public class FlywheelLUT {
     private final List<ShotData> table = new ArrayList<>();
 
     public FlywheelLUT() {
-        table.add(new ShotData(47, 925, 0.45));
-        table.add(new ShotData(63, 975, 0.4));
-        table.add(new ShotData(82.87, 1100, 0.35));
-        table.add(new ShotData(101, 1200, 0.27));
-        table.add(new ShotData(116.5, 1350, 0));
-        table.add(new ShotData(136, 1400, 0));
-        table.add(new ShotData(149, 1500, 0));
-
-
+        table.add(new ShotData(53.5, 925, 0.45));
+        table.add(new ShotData(68.9, 975, 0.3));
+        table.add(new ShotData(84, 1075, 0.2));
+        table.add(new ShotData(100.5, 1140, 0.15));
+        table.add(new ShotData(115.68, 1225, 0.1));
+        table.add(new ShotData(132.8, 1330, 0.05));
+        table.add(new ShotData(147, 1540, 0));
     }
 
     public ShotData getShotData(double distance) {

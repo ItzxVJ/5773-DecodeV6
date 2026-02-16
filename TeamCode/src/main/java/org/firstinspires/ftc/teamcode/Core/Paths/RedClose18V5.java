@@ -14,13 +14,12 @@ public class RedClose18V5 {
     public static Pose firstShootPos = new Pose(30, -10, -1);
 
     public static Pose preIntake1 = new Pose(-3,-22.9,-1.58);
-    public static Pose intake1 = new Pose(-7,-46.77,-1.58);
+    public static Pose intake1 = new Pose(-7,-48,-1.58);
 
-    public static Pose secondShootControl = new Pose(5.7,-14.4,-1.55);
     public static Pose secondShootPos = new Pose(19.5,-8.5,-1.75);
 
     public static Pose intake2Control = new Pose(2,-15.5,-1.57);
-    public static Pose intake2 = new Pose(-4.7,-52,-1.02);
+    public static Pose intake2 = new Pose(-3,-52.5,-1.05);
 
     public static Pose thirdShootPos = new Pose(12.6,-3.9,-1.74);
 
@@ -74,9 +73,9 @@ public class RedClose18V5 {
                 .setLinearHeadingInterpolation(
                         start.getHeading(),
                         intake1.getHeading(),
-                        0.8
+                        0.9
                 )
-                .setBrakingStrength(brakingStrength)
+                .setNoDeceleration()
                 .build();
     }
 
@@ -231,8 +230,8 @@ public class RedClose18V5 {
                         fifthShootPos.getHeading(),
                         intake6.getHeading()
                 )
-                .setBrakingStrength(brakingStrength)
                 .setTValueConstraint(tConstraint)
+                .setNoDeceleration()
                 .build();
     }
 
@@ -251,7 +250,7 @@ public class RedClose18V5 {
                 )
 
                 .setBrakingStrength(brakingStrength)
-                .setTValueConstraint(tConstraint)
+                .setTValueConstraint(0.5)
                 .build();
     }
 

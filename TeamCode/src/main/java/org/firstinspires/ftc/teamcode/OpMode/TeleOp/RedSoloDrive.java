@@ -4,8 +4,10 @@ import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.OpMode.Helpers.SequentialGroupFixed;
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
@@ -59,31 +61,30 @@ public class RedSoloDrive extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_y / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_x / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().right_stick_x / 3,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().right_stick_x * 0.5,
                 true
         );
 
         driverControlled.schedule();
 
+        Command shootCommand = new SequentialGroup(
+                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
+                NextFlywheel.INSTANCE.instantRun(),
+                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                new InstantCommand(() -> intakePower = passIn),
+                new InstantCommand(() -> gatePos = gateAllow)
+        );
+
         Gamepads.gamepad1().rightTrigger()
                 .atLeast(0.2)
-                .whenBecomesTrue(
-                        new SequentialGroup(
-                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
-                                NextFlywheel.INSTANCE.instantRun(),
-                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                new InstantCommand(() -> intakePower = passIn),
-                                new InstantCommand(() -> gatePos = gateAllow)
-                        )
-                )
-                .whenBecomesFalse(
-                        new ParallelGroup(
-                                new InstantCommand(() -> gatePos = gateBlock),
-                                new InstantCommand(() -> intakePower = passRest)
-                        )
-                );
+                .whenBecomesTrue(shootCommand::schedule)
+                .whenBecomesFalse(() -> {
+                    shootCommand.cancel();
+                    gatePos = gateBlock;
+                    intakePower = passRest;
+                });
 
         Gamepads.gamepad1().leftTrigger()
                 .atLeast(0.2)
@@ -103,6 +104,8 @@ public class RedSoloDrive extends NextFTCOpMode {
                 .whenBecomesTrue(NextTurret.INSTANCE.decreaseYaw());
         Gamepads.gamepad1().dpadDown()
                 .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
+        Gamepads.gamepad1().y()
+                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(0,0,0))));
 
     }
 
