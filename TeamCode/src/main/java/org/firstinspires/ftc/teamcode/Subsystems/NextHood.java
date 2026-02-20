@@ -10,7 +10,7 @@ import dev.nextftc.hardware.impl.ServoEx;
 public class NextHood implements Subsystem {
     public static final NextHood INSTANCE = new NextHood();
     private NextHood() {}
-    private final ServoEx leftHood = new ServoEx("leftHood", -1);
+    private final ServoEx leftHood = new ServoEx("rightHood", -1);
     FlywheelLUT.ShotData shot;
 
     @Override
