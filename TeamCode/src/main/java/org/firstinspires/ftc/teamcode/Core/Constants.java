@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Core;
 
+import static org.firstinspires.ftc.teamcode.Core.Paths.BlueClose18V5.yOffset;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 
@@ -16,7 +18,7 @@ public class Constants {
     public static double passOut = 1;
     public static double passRest = 0;
     public static Pose redGoalPose = new Pose(79.39,-63.03);
-    public static Pose blueGoalPose = new Pose(0,0, Math.toRadians(0));
+    public static Pose blueGoalPose = new Pose(79.39,63.03 + yOffset);
     public static Pose lastPose = new Pose(0,0, Math.toRadians(0));
     public static double interpolatedTargetRPM;
     public static double targetRPM;
