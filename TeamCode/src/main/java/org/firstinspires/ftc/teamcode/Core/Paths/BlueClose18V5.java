@@ -76,7 +76,6 @@ public class BlueClose18V5 {
                         intake1.getHeading(),
                         0.9
                 )
-                .setNoDeceleration()
                 .build();
     }
 
