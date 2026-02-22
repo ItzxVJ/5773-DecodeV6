@@ -9,7 +9,7 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.PathChain;
 
 public class BlueClose18V5 {
-    public static double yOffset = 0;
+    public static double yOffset = 20.5;
 
     public static Pose start = new Pose(64.7, 38.5 + yOffset, 2.39);
     public static Pose firstShootPos = new Pose(30, 10 + yOffset, 1);
@@ -20,7 +20,7 @@ public class BlueClose18V5 {
     public static Pose secondShootPos = new Pose(19.5,8.5 + yOffset,1.75);
 
     public static Pose intake2Control = new Pose(2,15.5 + yOffset,1.57);
-    public static Pose intake2 = new Pose(-3,52.5 + yOffset,1.05);
+    public static Pose intake2 = new Pose(-3,52.7 + yOffset,1.05);
 
     public static Pose thirdShootPos = new Pose(12.6,3.9 + yOffset,1.74);
 

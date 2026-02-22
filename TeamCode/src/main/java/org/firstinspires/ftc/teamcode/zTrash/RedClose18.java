@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Core.Paths;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
@@ -6,7 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.follower.Follower;
 
-public final class RedClose18 {
+public class RedClose18 {
 
     /* ------------------ POSES ------------------ */
 

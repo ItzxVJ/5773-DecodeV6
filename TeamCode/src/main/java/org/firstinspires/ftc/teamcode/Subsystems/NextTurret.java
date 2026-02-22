@@ -29,9 +29,9 @@ public class NextTurret implements Subsystem {
     public static double lowLimit  = -750;
     public static double highLimit =  750;
 
-    public static double kP = 0.019;
-    public static double kD = 0.0003;
-    public static double kS = 0.2;
+    public static double kP = 0.003;
+    public static double kD = 0.0002;
+    public static double kS = 0.125;
     public static double minPower = 0.05;
 
     public static double finekP = 0.004;
@@ -163,5 +163,40 @@ public class NextTurret implements Subsystem {
     }
     private static double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    public void faceWhileMoving(
+            Pose goal,
+            Pose robot,
+            double vx,   // field-centric inches/sec
+            double vy
+    ) {
+
+        double tFlight = estimateFlightTime(gDist);
+
+        double futureX = robot.getX() + vx * tFlight;
+        double futureY = robot.getY() + vy * tFlight;
+
+        double angle = Math.atan2(
+                goal.getY() - futureY,
+                goal.getX() - futureX
+        );
+
+        setYaw(angle - robot.getHeading());
+    }
+    public Command faceWhileMovingCommand(
+            Pose goal,
+            Supplier<Pose> robotPose,
+            Supplier<Double> vx,
+            Supplier<Double> vy
+    ) {
+        return new LambdaCommand()
+                .setUpdate(() -> faceWhileMoving(
+                        goal,
+                        robotPose.get(),
+                        vx.get(),
+                        vy.get()
+                ))
+                .setIsDone(() -> false);
     }
 }

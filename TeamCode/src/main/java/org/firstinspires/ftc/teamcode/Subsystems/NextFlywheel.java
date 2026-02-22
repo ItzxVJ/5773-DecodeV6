@@ -30,7 +30,6 @@ public class NextFlywheel implements Subsystem {
 
     public static double threshold = 30;
 
-    public static double currentRPM = 0;
     public static boolean stop;
 
     private double cachedVoltage = 12.0;
@@ -47,11 +46,16 @@ public class NextFlywheel implements Subsystem {
     @Override
     public void periodic() {
 
-        controller.setPIDF(skS, skV, skP, skI, skD);
+        if (gDist >= 110) {
+            controller.setPIDF(fskS, fskV, fskP, fskI, fskD);
+        }
+
+        if (gDist < 110) {
+            controller.setPIDF(cskS, cskV, cskP, cskI, cskD);
+        }
 
         currentRPM = Math.abs(shootR.getVelocity());
 
-        // Cache voltage (does not need to update every loop)
         double now = System.nanoTime() / 1e9;
         if (now - lastVoltageTime > 0.1) {
             cachedVoltage = getBatteryVoltage();
@@ -122,6 +126,36 @@ public class NextFlywheel implements Subsystem {
             stop = false;
         });
     }
+    public Command calculations(
+            Pose target,
+            Supplier<Pose> robotPose,
+            Supplier<Double> vx,
+            Supplier<Double> vy) {
+        return new LambdaCommand()
+                .setUpdate(() -> {
+                    Pose robot = robotPose.get();
+
+                    double tFlight = estimateFlightTime(gDist);
+
+                    double futureX = robot.getX() + vx.get() * tFlight;
+                    double futureY = robot.getY() + vy.get() * tFlight;
+
+                    gDist = Math.hypot(
+                            target.getX() - futureX,
+                            target.getY() - futureY
+                    );
+
+                    shot = lookup.getShotData(gDist);
+                    computedRPM = shot.rpm;
+                })
+                .setIsDone(() -> false);
+    }
+
+    public Command foreverRun() {
+        return new LambdaCommand()
+                .setUpdate(() -> { commandedRPM = computedRPM; stop = false; })
+                .setIsDone(() -> false);
+    }
 
     public Command rest() {
         return new InstantCommand(() -> {
@@ -137,13 +171,6 @@ public class NextFlywheel implements Subsystem {
     public Command farRev() {
         return new InstantCommand(() -> {
             commandedRPM = 1800;
-            stop = false;
-        });
-    }
-
-    public Command closeRev() {
-        return new InstantCommand(() -> {
-            commandedRPM = 1000;
             stop = false;
         });
     }

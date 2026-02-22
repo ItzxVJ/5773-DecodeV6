@@ -1,10 +1,8 @@
-package org.firstinspires.ftc.teamcode.OpMode.Auto;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.Core.Paths.RedClose18V3.*;
+import static org.firstinspires.ftc.teamcode.zTrash.RedClose18V3.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
@@ -26,7 +24,7 @@ import dev.nextftc.extensions.pedro.PedroComponent;
 import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-@Autonomous(name = "RedClose18V4")
+//@Autonomous(name = "RedClose18V4")
 public class RedClose18V4 extends NextFTCOpMode {
     {
         addComponents(

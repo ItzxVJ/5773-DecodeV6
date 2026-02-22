@@ -1,7 +1,7 @@
-package org.firstinspires.ftc.teamcode.OpMode.Auto;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.Core.Paths.BasicRedClose12.*;
+import static org.firstinspires.ftc.teamcode.zTrash.BasicRedClose12.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -9,11 +9,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 
-
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
-
+import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.commands.delays.Delay;
@@ -24,14 +23,14 @@ import dev.nextftc.core.commands.utility.InstantCommand;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.FollowPath;
 import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 
-
-//@Autonomous(name = "RedClose12")
-public class RedClose12 extends NextFTCOpMode {
+@Autonomous(name = "RedClose12V4")
+public class RedClose12V4 extends NextFTCOpMode {
     {
         addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE),
+                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
                 new PedroComponent(PConstants::createFollower)
         );
     }
@@ -42,9 +41,14 @@ public class RedClose12 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.stop(
-                        //new InstantCommand(() -> hoodPos = hoodClosePos)
-                        ))
+
+                        NextFlywheel.INSTANCE.stop(),
+                        new SequentialGroup(
+                            NextTurret.INSTANCE.resetTurret(),
+                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
+                        ),
+                        NextFlywheel.INSTANCE.stop()
+                )
         );
     }
     @Override
@@ -56,55 +60,59 @@ public class RedClose12 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new SequentialGroup(
                         new InstantCommand(() -> intakePower = passIn),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> firstShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(firstShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
+                        new Delay(1.5),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(firstPreIntake(follower())),
-                        new Delay(0.1),
                         new FollowPath(firstIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
-                        new Delay(0.1),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> secondShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(secondShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
+                        new Delay(1.5),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(secondPreIntake(follower())),
-                        new Delay(0.1),
                         new FollowPath(secondIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> thirdShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(thirdShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
+                        new Delay(1.5),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(thirdPreIntake(follower())),
-                        new Delay(0.1),
                         new FollowPath(thirdIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
+                        NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> fourthShootPos),
+                        NextFlywheel.INSTANCE.instantRun(),
                         new FollowPath(fourthShoot(follower())),
                         new WaitUntil(NextFlywheel.INSTANCE::isReady),
                         new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
+                        new Delay(1.5),
                         new InstantCommand(() -> gatePos = gateBlock),
                         NextFlywheel.INSTANCE.rest(),
                         new FollowPath(park(follower()))
-
-
                 )
+
         );
     }
     @Override
     public void onUpdate() {
+        follower().update();
+        ActiveOpMode.telemetry().addData("Distance", gDist);
+        ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
+        ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
+        ActiveOpMode.telemetry().update();
     }
     @Override
     public void onStop() {
-
+        lastPose = follower().getPose();
     }
 }

@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
@@ -17,7 +18,6 @@ import dev.nextftc.bindings.BindingManager;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
-import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -31,9 +31,9 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "Community Event Close and Far")
-public class ForTheKids extends NextFTCOpMode {
-    public ForTheKids() {
+@TeleOp(name = "BlueSoloDrive")
+public class BlueSoloDrive extends NextFTCOpMode {
+    public BlueSoloDrive() {
         addComponents(
                 new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
@@ -49,9 +49,9 @@ public class ForTheKids extends NextFTCOpMode {
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
-                                new InstantCommand(() -> turretIdle = false)
+                                NextTurret.INSTANCE.faceCommand(blueGoalPose, () -> follower().getPose())
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(blueGoalPose, () -> follower().getPose()),
                         NextFlywheel.INSTANCE.stop()
                 )
         );
@@ -59,44 +59,30 @@ public class ForTheKids extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_y / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_x / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().right_stick_x / 3,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().right_stick_x * 0.5,
                 true
         );
 
         driverControlled.schedule();
 
-        Gamepads.gamepad1().b()
-                .whenBecomesTrue(
-                        new SequentialGroup(
-                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
-                                NextFlywheel.INSTANCE.closeRev(),
-                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                new InstantCommand(() -> intakePower = passIn),
-                                new InstantCommand(() -> gatePos = gateAllow),
-                                new Delay(shootWait),
-                                new InstantCommand(() -> gatePos = gateBlock),
-                                new InstantCommand(() -> intakePower = passRest)
-                        )
-                );
+        Command shootCommand = new SequentialGroup(
+                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> follower().getPose()),
+                NextFlywheel.INSTANCE.instantRun(),
+                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                new InstantCommand(() -> intakePower = passIn),
+                new InstantCommand(() -> gatePos = gateAllow)
+        );
 
-        Gamepads.gamepad1().y()
-                .whenBecomesTrue(
-                        new SequentialGroup(
-                                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
-                                NextFlywheel.INSTANCE.farRev(),
-                                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                                new InstantCommand(() -> intakePower = passIn),
-                                new InstantCommand(() -> gatePos = gateAllow),
-                                new Delay(shootWait),
-                                new InstantCommand(() -> gatePos = gateBlock),
-                                new InstantCommand(() -> intakePower = passRest)
-                        )
-                );
-
-        Gamepads.gamepad1().x()
-                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
+        Gamepads.gamepad1().rightTrigger()
+                .atLeast(0.2)
+                .whenBecomesTrue(shootCommand::schedule)
+                .whenBecomesFalse(() -> {
+                    shootCommand.cancel();
+                    gatePos = gateBlock;
+                    intakePower = passRest;
+                });
 
         Gamepads.gamepad1().leftTrigger()
                 .atLeast(0.2)
@@ -116,6 +102,8 @@ public class ForTheKids extends NextFTCOpMode {
                 .whenBecomesTrue(NextTurret.INSTANCE.decreaseYaw());
         Gamepads.gamepad1().dpadDown()
                 .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
+        Gamepads.gamepad1().y()
+                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(0,0,0))));
 
     }
 

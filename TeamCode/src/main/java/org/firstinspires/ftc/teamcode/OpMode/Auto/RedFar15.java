@@ -1,14 +1,13 @@
 package org.firstinspires.ftc.teamcode.OpMode.Auto;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.Core.Paths.RedClose18V5.*;
+import static org.firstinspires.ftc.teamcode.Core.Paths.RedFar15.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
-
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
@@ -28,8 +27,9 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "RedClose18V5")
-public class RedClose18V5 extends NextFTCOpMode {
+@Autonomous(name = "RedFar15")
+public class RedFar15 extends NextFTCOpMode {
+
     {
         addComponents(
                 BulkReadComponent.INSTANCE,
@@ -41,13 +41,13 @@ public class RedClose18V5 extends NextFTCOpMode {
                         NextTurret.INSTANCE
                 ),
                 new PedroComponent(PConstants::createFollower)
-
         );
     }
 
     @Override
     public void onInit() {
         follower().setStartingPose(start);
+
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
@@ -82,145 +82,139 @@ public class RedClose18V5 extends NextFTCOpMode {
 
     private Command autonomousRoutine() {
         return new SequentialGroup(
-                shootAndIntake1(),
+                shoot1(),
+                intake1(),
                 shoot2(),
-                gateIntake1(),
+                rawIntake2(),
                 shoot3(),
-                gateIntake2(),
+                rawIntake3(),
                 shoot4(),
-                gateIntake3(),
+                rawIntake4(),
                 shoot5(),
-                intakeClose(),
-                shoot6(),
-//                intakeFar(),
-//                shoot7(),
-                park()
+                parkCmd()
         );
     }
 
-    private Command shootAndIntake1() {
+    /* ========================= SHOOT 1 ========================= */
+
+    private Command shoot1() {
         return new SequentialGroup(
                 new InstantCommand(() -> intakePower = passIn),
                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> firstShootPos),
                 NextFlywheel.INSTANCE.instantRun(),
+
                 new FollowPath(firstShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
+
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
-                new InstantCommand(() -> gatePos = gateBlock),
-                NextTurret.INSTANCE.resetYaw(),
-                new FollowPath(firstIntake(follower()))
+                new InstantCommand(() -> gatePos = gateBlock)
         );
     }
+
+    /* ========================= INTAKE 1 ========================= */
+
+    private Command intake1() {
+        return new SequentialGroup(
+                new FollowPath(firstIntake(follower())),
+                new Delay(gateWait)
+        );
+    }
+
+    /* ========================= SHOOT 2 ========================= */
 
     private Command shoot2() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> secondShootPos),
                 NextFlywheel.INSTANCE.instantRun(),
+
                 new FollowPath(secondShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
+
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
                 new InstantCommand(() -> gatePos = gateBlock)
-
         );
     }
 
-    private Command gateIntake1() {
+    /* ========================= RAW INTAKE 2 ========================= */
+
+    private Command rawIntake2() {
         return new SequentialGroup(
-                new FollowPath(gate1(follower())),
+                new FollowPath(secondRawIntake(follower())),
                 new Delay(gateWait)
         );
     }
+
+    /* ========================= SHOOT 3 ========================= */
 
     private Command shoot3() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> thirdShootPos),
                 NextFlywheel.INSTANCE.instantRun(),
+
                 new FollowPath(thirdShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
+
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
                 new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
-    private Command gateIntake2() {
+    /* ========================= RAW INTAKE 3 ========================= */
+
+    private Command rawIntake3() {
         return new SequentialGroup(
-                new FollowPath(gate2(follower())),
+                new FollowPath(thirdRawIntake(follower())),
                 new Delay(gateWait)
         );
     }
+
+    /* ========================= SHOOT 4 ========================= */
 
     private Command shoot4() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> fourthShootPos),
                 NextFlywheel.INSTANCE.instantRun(),
+
                 new FollowPath(fourthShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
+
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
                 new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
-    private Command gateIntake3() {
+    /* ========================= RAW INTAKE 4 ========================= */
+
+    private Command rawIntake4() {
         return new SequentialGroup(
-                new FollowPath(gate3(follower())),
+                new FollowPath(fourthRawIntake(follower())),
                 new Delay(gateWait)
         );
     }
+
+    /* ========================= SHOOT 5 ========================= */
 
     private Command shoot5() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> fifthShootPos),
                 NextFlywheel.INSTANCE.instantRun(),
+
                 new FollowPath(fifthShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
+
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
                 new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
-    private Command intakeClose() {
-        return new SequentialGroup(
-                new FollowPath(closeIntake(follower()))
-        );
-    }
+    /* ========================= PARK ========================= */
 
-    private Command shoot6() {
-        return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> sixthShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
-                new FollowPath(sixthShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait),
-                new InstantCommand(() -> gatePos = gateBlock)
-        );
-    }
-
-    private Command intakeFar() {
-        return new SequentialGroup(
-                new FollowPath(farIntake(follower()))
-        );
-    }
-
-    private Command shoot7() {
-        return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> seventhShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
-                new FollowPath(seventhShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait),
-                new InstantCommand(() -> gatePos = gateBlock),
-                NextFlywheel.INSTANCE.rest()
-        );
-    }
-
-    private Command park() {
+    private Command parkCmd() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.stop(),
                 new FollowPath(lilPark(follower())),

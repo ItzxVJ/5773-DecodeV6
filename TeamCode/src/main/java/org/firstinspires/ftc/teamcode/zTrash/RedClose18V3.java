@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Core.Paths;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;

@@ -34,7 +34,7 @@ public class RedClose18V5 {
     public static Pose fifthShootControl = new Pose(-0.3,-20.5,-1.6);
     public static Pose fifthShootPos = new Pose(20.9,-17.9,-1.56);
 
-    public static Pose intake6 = new Pose(20.5,-44.9,-1.57);
+    public static Pose intake6 = new Pose(20.5,-40,-1.57);
 
     public static Pose sixthShootPos = fifthShootPos;
 

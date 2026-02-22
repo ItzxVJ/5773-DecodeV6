@@ -7,7 +7,6 @@ import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.OpMode.Helpers.SequentialGroupFixed;
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
@@ -19,7 +18,6 @@ import dev.nextftc.bindings.BindingManager;
 
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
-import dev.nextftc.core.commands.delays.Delay;
 import dev.nextftc.core.commands.delays.WaitUntil;
 import dev.nextftc.core.commands.groups.ParallelGroup;
 import dev.nextftc.core.commands.groups.SequentialGroup;
@@ -45,13 +43,19 @@ public class RedSoloDrive extends NextFTCOpMode {
     }
     @Override
     public void onInit() {
-        follower().setStartingPose(lastPose);
+        follower().setStartingPose(new Pose(0, -63.03));
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                             NextTurret.INSTANCE.resetTurret(),
-                            NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
+                            NextTurret.INSTANCE.faceWhileMovingCommand(
+                                    redGoalPose,
+                                    () -> follower().getPose(),
+                                    () -> follower().getVelocity().getXComponent(),
+                                    () -> follower().getVelocity().getYComponent()
+
+                            )
                         ),
                         NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
                         NextFlywheel.INSTANCE.stop()
@@ -61,17 +65,26 @@ public class RedSoloDrive extends NextFTCOpMode {
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.75,
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.9,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 1,
                 () -> (double) -ActiveOpMode.gamepad1().right_stick_x * 0.5,
                 true
         );
 
         driverControlled.schedule();
 
+        Command doTheCalculations = new ParallelGroup(
+                NextFlywheel.INSTANCE.calculations(
+                        redGoalPose,
+                        () -> follower().getPose(),
+                        () -> follower().getVelocity().getXComponent(),
+                        () -> follower().getVelocity().getYComponent()),
+                NextFlywheel.INSTANCE.foreverRun()
+        );
+
+        doTheCalculations.schedule();
+
         Command shootCommand = new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> follower().getPose()),
-                NextFlywheel.INSTANCE.instantRun(),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
                 new InstantCommand(() -> intakePower = passIn),
                 new InstantCommand(() -> gatePos = gateAllow)

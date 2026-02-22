@@ -1,6 +1,5 @@
-package org.firstinspires.ftc.teamcode.Core.Paths;
+package org.firstinspires.ftc.teamcode.zTrash;
 
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;

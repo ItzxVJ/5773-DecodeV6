@@ -1,13 +1,12 @@
-package org.firstinspires.ftc.teamcode.OpMode.Auto;
+package org.firstinspires.ftc.teamcode.zTrash;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static org.firstinspires.ftc.teamcode.Core.Paths.RedClose18V5.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
+
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
@@ -27,9 +26,8 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "RedClose18V7")
-public class RedClose18V7 extends NextFTCOpMode {
-
+//@Autonomous(name = "RedClose18V6")
+public class RedClose18V6 extends NextFTCOpMode {
     {
         addComponents(
                 BulkReadComponent.INSTANCE,
@@ -41,6 +39,7 @@ public class RedClose18V7 extends NextFTCOpMode {
                         NextTurret.INSTANCE
                 ),
                 new PedroComponent(PConstants::createFollower)
+
         );
     }
 
@@ -91,11 +90,11 @@ public class RedClose18V7 extends NextFTCOpMode {
                 shoot5(),
                 intakeClose(),
                 shoot6(),
+//                intakeFar(),
+//                shoot7(),
                 park()
         );
     }
-
-    /* ========================= SHOOT 1 ========================= */
 
     private Command shootAndIntake1() {
         return new SequentialGroup(
@@ -104,23 +103,13 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(firstShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
-
-                new ParallelGroup(
-                        new FollowPath(firstIntake(follower())),
-                        new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
-                        )
-                ),
-
-                NextTurret.INSTANCE.resetYaw()
+                new InstantCommand(() -> gatePos = gateBlock),
+                NextTurret.INSTANCE.resetYaw(),
+                new FollowPath(firstIntake(follower()))
         );
     }
-
-    /* ========================= SHOOT 2 ========================= */
 
     private Command shoot2() {
         return new SequentialGroup(
@@ -128,26 +117,19 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(secondShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                new Delay(shootWait),
+                new InstantCommand(() -> gatePos = gateBlock)
+
         );
     }
 
     private Command gateIntake1() {
         return new SequentialGroup(
-                new ParallelGroup(
-                        new FollowPath(gate1(follower()), true),
-                        new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
-                        )
-                ),
+                new FollowPath(gate1(follower())),
                 new Delay(gateWait)
         );
     }
-
-    /* ========================= SHOOT 3 ========================= */
 
     private Command shoot3() {
         return new SequentialGroup(
@@ -155,26 +137,18 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(thirdShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                new Delay(shootWait),
+                new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
     private Command gateIntake2() {
         return new SequentialGroup(
-                new ParallelGroup(
-                        new FollowPath(gate2(follower()), true),
-                        new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
-                        )
-                ),
+                new FollowPath(gate2(follower())),
                 new Delay(gateWait)
         );
     }
-
-    /* ========================= SHOOT 4 ========================= */
 
     private Command shoot4() {
         return new SequentialGroup(
@@ -182,26 +156,18 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(fourthShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                new Delay(shootWait),
+                new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
     private Command gateIntake3() {
         return new SequentialGroup(
-                new ParallelGroup(
-                        new FollowPath(gate3(follower()), true),
-                        new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
-                        )
-                ),
+                new FollowPath(gate3(follower())),
                 new Delay(gateWait)
         );
     }
-
-    /* ========================= SHOOT 5 ========================= */
 
     private Command shoot5() {
         return new SequentialGroup(
@@ -209,25 +175,17 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(fifthShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                new Delay(shootWait),
+                new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
     private Command intakeClose() {
         return new SequentialGroup(
-                new ParallelGroup(
-                        new FollowPath(closeIntake(follower())),
-                        new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
-                        )
-                )
+                new FollowPath(closeIntake(follower()))
         );
     }
-
-    /* ========================= SHOOT 6 (FINAL) ========================= */
 
     private Command shoot6() {
         return new SequentialGroup(
@@ -235,14 +193,30 @@ public class RedClose18V7 extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(sixthShoot(follower())),
                 new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
                 new InstantCommand(() -> gatePos = gateAllow),
                 new Delay(shootWait),
                 new InstantCommand(() -> gatePos = gateBlock)
         );
     }
 
-    /* ========================= PARK ========================= */
+    private Command intakeFar() {
+        return new SequentialGroup(
+                new FollowPath(farIntake(follower()))
+        );
+    }
+
+    private Command shoot7() {
+        return new SequentialGroup(
+                NextFlywheel.INSTANCE.calcRPM(redGoalPose, () -> seventhShootPos),
+                NextFlywheel.INSTANCE.instantRun(),
+                new FollowPath(seventhShoot(follower())),
+                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                new InstantCommand(() -> gatePos = gateAllow),
+                new Delay(shootWait),
+                new InstantCommand(() -> gatePos = gateBlock),
+                NextFlywheel.INSTANCE.rest()
+        );
+    }
 
     private Command park() {
         return new SequentialGroup(
