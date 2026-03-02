@@ -10,18 +10,19 @@ import com.pedropathing.paths.PathChain;
 
 public class RedClose18V5 {
 
-    public static Pose start = new Pose(64.7, -38.5, -2.39);
-    public static Pose firstShootPos = new Pose(30, -10, -1);
+    public static Pose start = new Pose(55.27, -48.60, -2.42);
+    public static Pose firstShootPos = new Pose(14.10, -22.05, -2.36);
 
-    public static Pose preIntake1 = new Pose(-3,-22.9,-1.58);
-    public static Pose intake1 = new Pose(-7,-42,-1.58);
+    public static Pose preIntake1 = new Pose(-12.52, -34.93, -1.57);
+    public static Pose intake1 = new Pose(-17, -52.96, -1.60);
 
-    public static Pose secondShootPos = new Pose(19.5,-8.5,-1.75);
+    public static Pose secondShootPos = new Pose(0.28, -11, -1.53);
 
-    public static Pose intake2Control = new Pose(2,-15.5,-1.57);
-    public static Pose intake2 = new Pose(-3,-52.5,-1.05);
+    public static Pose intake2Control = new Pose(-13.33, -37, -1.58);
+    public static Pose intake2 = new Pose(-13.25, -63, -1.042);
+    public static Pose gateRelease = new Pose(-13.25, -63, -1.042);
 
-    public static Pose thirdShootPos = new Pose(12.6,-3.9,-1.74);
+    public static Pose thirdShootPos = secondShootPos;
 
     public static Pose intake3Control = intake2Control;
     public static Pose intake3 = intake2;
@@ -31,19 +32,14 @@ public class RedClose18V5 {
     public static Pose intake4Control = intake3Control;
     public static Pose intake4 = intake3;
 
-    public static Pose fifthShootControl = new Pose(-0.3,-20.5,-1.6);
-    public static Pose fifthShootPos = new Pose(20.9,-17.9,-1.56);
+    public static Pose fifthShootControl = new Pose(-10.97, -38.99, -1.56);
+    public static Pose fifthShootPos = new Pose(13.7, -27.4, -1.63);
 
-    public static Pose intake6 = new Pose(20.5,-40,-1.57);
+    public static Pose intake6 = new Pose(10.89, -45.93, -1.63);
 
     public static Pose sixthShootPos = fifthShootPos;
 
-    public static Pose intake7Control = new Pose(-29,-7,-1.61);
-    public static Pose intake7 = new Pose(-32,-45,-1.61);
-
-    public static Pose seventhShootPos = new Pose(22.4,-14.3,-2.63);
-
-    public static Pose park = new Pose(18.3,-16.6,-2.63);
+    public static Pose park = new Pose(11.60, -32.12, -1.63);
 
     /* ---------------- FIRST SHOOT & INTAKE ---------------- */
 
@@ -254,51 +250,17 @@ public class RedClose18V5 {
                 .build();
     }
 
-    /* ---------------- SIXTH INTAKE ---------------- */
-
-    public static PathChain farIntake(Follower f) {
-        return f.pathBuilder()
-                .addPath(new BezierCurve(
-                        sixthShootPos,
-                        intake7Control,
-                        intake7
-                ))
-                .setLinearHeadingInterpolation(
-                        sixthShootPos.getHeading(),
-                        intake7.getHeading(),
-                        0.3
-                )
-                .setBrakingStrength(brakingStrength)
-                .build();
-    }
-
-    /* ---------------- SEVENTH SHOOT ---------------- */
-
-    public static PathChain seventhShoot(Follower f) {
-        return f.pathBuilder()
-                .addPath(new BezierLine(
-                        intake7,
-                        seventhShootPos
-                ))
-                .setLinearHeadingInterpolation(
-                        intake7.getHeading(),
-                        seventhShootPos.getHeading(), 0.01
-                )
-                .setBrakingStrength(brakingStrength)
-                .setTValueConstraint(tConstraint)
-                .build();
-    }
 
     /* ---------------- PARK ---------------- */
 
     public static PathChain lilPark(Follower f) {
         return f.pathBuilder()
                 .addPath(new BezierLine(
-                        seventhShootPos,
+                        sixthShootPos,
                         park
                 ))
                 .setLinearHeadingInterpolation(
-                        seventhShootPos.getHeading(),
+                        sixthShootPos.getHeading(),
                         park.getHeading()
                 )
                 .setBrakingStrength(brakingStrength)

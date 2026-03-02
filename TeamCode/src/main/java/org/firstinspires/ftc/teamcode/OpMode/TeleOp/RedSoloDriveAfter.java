@@ -33,9 +33,9 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "AA RedSoloDriveRandom")
-public class RedSoloDrive extends NextFTCOpMode {
-    public RedSoloDrive() {
+@TeleOp(name = "AA RedSoloDriveAfter")
+public class RedSoloDriveAfter extends NextFTCOpMode {
+    public RedSoloDriveAfter() {
         addComponents(
                 new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE, NextCamera.INSTANCE, NextLights.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
@@ -50,14 +50,14 @@ public class RedSoloDrive extends NextFTCOpMode {
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
-                                NextTurret.INSTANCE.resetTurret(),
-                            NextTurret.INSTANCE.faceWhileMovingCommand(
-                                    redGoalPose,
-                                    () -> follower().getPose(),
-                                    () -> follower().getVelocity().getXComponent(),
-                                    () -> follower().getVelocity().getYComponent()
+                                NextTurret.INSTANCE.resetTheTurret(),
+                                NextTurret.INSTANCE.faceWhileMovingCommand(
+                                        redGoalPose,
+                                        () -> follower().getPose(),
+                                        () -> follower().getVelocity().getXComponent(),
+                                        () -> follower().getVelocity().getYComponent()
 
-                            )
+                                )
                         ),
                         NextFlywheel.INSTANCE.stop(),
                         NextLights.INSTANCE.setPurple())

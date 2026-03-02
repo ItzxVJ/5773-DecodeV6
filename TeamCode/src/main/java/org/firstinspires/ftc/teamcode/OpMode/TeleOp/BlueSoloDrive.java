@@ -8,9 +8,11 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
+import org.firstinspires.ftc.teamcode.Subsystems.NextCamera;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
+import org.firstinspires.ftc.teamcode.Subsystems.NextLights;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
 import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
@@ -31,11 +33,11 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "BlueSoloDrive")
+@TeleOp(name = "AA BlueSoloDriveRandom")
 public class BlueSoloDrive extends NextFTCOpMode {
     public BlueSoloDrive() {
         addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
+                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE, NextCamera.INSTANCE, NextLights.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
                 BulkReadComponent.INSTANCE,
                 BindingsComponent.INSTANCE
@@ -43,35 +45,56 @@ public class BlueSoloDrive extends NextFTCOpMode {
     }
     @Override
     public void onInit() {
-        follower().setStartingPose(lastPose);
+        follower().setStartingPose(lastPose); //-63.03
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
-                                NextTurret.INSTANCE.faceCommand(blueGoalPose, () -> follower().getPose())
+                                NextTurret.INSTANCE.faceWhileMovingCommand(
+                                        blueGoalPose,
+                                        () -> follower().getPose(),
+                                        () -> follower().getVelocity().getXComponent(),
+                                        () -> follower().getVelocity().getYComponent()
+
+                                )
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(blueGoalPose, () -> follower().getPose()),
-                        NextFlywheel.INSTANCE.stop()
-                )
+                        NextFlywheel.INSTANCE.stop(),
+                        NextLights.INSTANCE.setPurple())
         );
     }
     @Override
     public void onStartButtonPressed() {
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.75,
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 0.75,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_y * 0.9,
+                () -> (double) -ActiveOpMode.gamepad1().left_stick_x * 1,
                 () -> (double) -ActiveOpMode.gamepad1().right_stick_x * 0.5,
                 true
         );
 
         driverControlled.schedule();
 
+        Command doTheCalculations = new ParallelGroup(
+                NextFlywheel.INSTANCE.calculations(
+                        blueGoalPose,
+                        () -> follower().getPose(),
+                        () -> follower().getVelocity().getXComponent(),
+                        () -> follower().getVelocity().getYComponent()),
+                NextFlywheel.INSTANCE.foreverRun()
+        );
+
+        doTheCalculations.schedule();
+
         Command shootCommand = new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> follower().getPose()),
-                NextFlywheel.INSTANCE.instantRun(),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                new InstantCommand(() -> intakePower = passIn),
+//                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                new InstantCommand(() -> {
+                    if (gDist > 110) {
+                        intakePower = passIn * 0.95;
+                    } else {
+                        intakePower = passIn;
+                    }
+
+                }),
                 new InstantCommand(() -> gatePos = gateAllow)
         );
 
@@ -83,12 +106,6 @@ public class BlueSoloDrive extends NextFTCOpMode {
                     gatePos = gateBlock;
                     intakePower = passRest;
                 });
-
-        Gamepads.gamepad1().leftTrigger()
-                .atLeast(0.2)
-                .whenBecomesTrue(
-                        NextFlywheel.INSTANCE.farRev()
-                );
 
         Gamepads.gamepad1().rightBumper()
                 .whenTrue(new InstantCommand(() -> intakePower = passIn))
@@ -103,7 +120,7 @@ public class BlueSoloDrive extends NextFTCOpMode {
         Gamepads.gamepad1().dpadDown()
                 .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
         Gamepads.gamepad1().y()
-                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(0,0,0))));
+                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(-62,-62,0))));
 
     }
 

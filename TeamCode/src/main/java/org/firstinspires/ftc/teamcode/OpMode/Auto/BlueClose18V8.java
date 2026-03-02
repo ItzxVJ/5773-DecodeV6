@@ -27,8 +27,8 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "BlueClose18V7")
-public class BlueClose18V7 extends NextFTCOpMode {
+@Autonomous(name = "BlueClose18V8")
+public class BlueClose18V8 extends NextFTCOpMode {
 
     {
         addComponents(
@@ -50,12 +50,18 @@ public class BlueClose18V7 extends NextFTCOpMode {
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
-                        new InstantCommand(() -> intakePower = passRest),
-                        NextFlywheel.INSTANCE.stop(),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
-                                NextTurret.INSTANCE.faceCommand(blueGoalPose, () -> follower().getPose())
-                        )
+                                NextTurret.INSTANCE.faceWhileMovingCommand(
+                                        blueGoalPose,
+                                        () -> follower().getPose(),
+                                        () -> follower().getVelocity().getXComponent(),
+                                        () -> follower().getVelocity().getYComponent()
+
+                                )
+                        ),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(blueGoalPose, () -> follower().getPose()),
+                        NextFlywheel.INSTANCE.stop()
                 )
         );
     }
@@ -80,64 +86,54 @@ public class BlueClose18V7 extends NextFTCOpMode {
     }
 
     private Command autonomousRoutine() {
-        return new SequentialGroup(
-                shootAndIntake1(),
-                shoot2(),
-                gateIntake1(),
-                shoot3(),
-                gateIntake2(),
-                shoot4(),
-                gateIntake3(),
-                shoot5(),
-                intakeClose(),
-                shoot6(),
-                park()
+        return new ParallelGroup(
+                doTheCalculations,
+                new SequentialGroup(
+                        shootAndIntake1(),
+                        shoot2(),
+                        gateIntake1(),
+                        shoot3(),
+                        gateIntake2(),
+                        shoot4(),
+                        gateIntake3(),
+                        shoot5(),
+                        intakeClose(),
+                        shoot6(),
+                        park()
+                )
         );
     }
-
-    /* ========================= SHOOT 1 ========================= */
 
     private Command shootAndIntake1() {
         return new SequentialGroup(
                 new InstantCommand(() -> intakePower = passIn),
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> firstShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
-                new FollowPath(firstShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait),
-
+                NextTurret.INSTANCE.resetYaw(),
                 new ParallelGroup(
-                        new FollowPath(firstIntake(follower())),
+                        new FollowPath(firstShoot(follower())),
                         new SequentialGroup(
-                                new Delay(shootWaitGateClose),
-                                new InstantCommand(() -> gatePos = gateBlock)
+                                new WaitUntil(() -> gDist > 60),
+                                shootTheBalls
+
                         )
                 ),
-
-                NextTurret.INSTANCE.resetYaw()
+                new ParallelGroup(
+                        new FollowPath(firstIntake(follower())),
+                        new InstantCommand(() -> gatePos = gateBlock)
+                )
         );
     }
 
-    /* ========================= SHOOT 2 ========================= */
-
     private Command shoot2() {
         return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> secondShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(secondShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                shootTheBalls
         );
     }
 
     private Command gateIntake1() {
         return new SequentialGroup(
                 new ParallelGroup(
-                        new FollowPath(gate1(follower())),
+                        new FollowPath(gate1(follower()), true),
                         new SequentialGroup(
                                 new Delay(shootWaitGateClose),
                                 new InstantCommand(() -> gatePos = gateBlock)
@@ -147,24 +143,17 @@ public class BlueClose18V7 extends NextFTCOpMode {
         );
     }
 
-    /* ========================= SHOOT 3 ========================= */
-
     private Command shoot3() {
         return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> thirdShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(thirdShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                shootTheBalls
         );
     }
 
     private Command gateIntake2() {
         return new SequentialGroup(
                 new ParallelGroup(
-                        new FollowPath(gate2(follower())),
+                        new FollowPath(gate2(follower()), true),
                         new SequentialGroup(
                                 new Delay(shootWaitGateClose),
                                 new InstantCommand(() -> gatePos = gateBlock)
@@ -174,24 +163,17 @@ public class BlueClose18V7 extends NextFTCOpMode {
         );
     }
 
-    /* ========================= SHOOT 4 ========================= */
-
     private Command shoot4() {
         return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> fourthShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(fourthShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                shootTheBalls
         );
     }
 
     private Command gateIntake3() {
         return new SequentialGroup(
                 new ParallelGroup(
-                        new FollowPath(gate3(follower())),
+                        new FollowPath(gate3(follower()), true),
                         new SequentialGroup(
                                 new Delay(shootWaitGateClose),
                                 new InstantCommand(() -> gatePos = gateBlock)
@@ -201,17 +183,10 @@ public class BlueClose18V7 extends NextFTCOpMode {
         );
     }
 
-    /* ========================= SHOOT 5 ========================= */
-
     private Command shoot5() {
         return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> fifthShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(fifthShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait)
+                shootTheBalls
         );
     }
 
@@ -227,28 +202,35 @@ public class BlueClose18V7 extends NextFTCOpMode {
         );
     }
 
-    /* ========================= SHOOT 6 (FINAL) ========================= */
-
     private Command shoot6() {
         return new SequentialGroup(
-                NextFlywheel.INSTANCE.calcRPM(blueGoalPose, () -> sixthShootPos),
-                NextFlywheel.INSTANCE.instantRun(),
                 new FollowPath(sixthShoot(follower())),
-                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                shootTheBalls
 
-                new InstantCommand(() -> gatePos = gateAllow),
-                new Delay(shootWait),
-                new InstantCommand(() -> gatePos = gateBlock)
         );
     }
-
-    /* ========================= PARK ========================= */
 
     private Command park() {
         return new SequentialGroup(
                 NextFlywheel.INSTANCE.stop(),
                 new FollowPath(lilPark(follower())),
                 new InstantCommand(() -> intakePower = 0)
+
         );
     }
+
+    Command doTheCalculations = new ParallelGroup(
+            NextFlywheel.INSTANCE.calculations(
+                    blueGoalPose,
+                    () -> follower().getPose(),
+                    () -> follower().getVelocity().getXComponent(),
+                    () -> follower().getVelocity().getYComponent()),
+            NextFlywheel.INSTANCE.foreverRun()
+    );
+
+    Command shootTheBalls = new SequentialGroup(
+            new InstantCommand(() -> gatePos = gateAllow),
+            new Delay(shootWait),
+            new InstantCommand(() -> gatePos = gateBlock)
+    );
 }

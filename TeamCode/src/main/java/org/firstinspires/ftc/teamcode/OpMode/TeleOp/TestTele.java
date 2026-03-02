@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.Subsystems.NextCamera;
 import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
 import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
 import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
-import org.firstinspires.ftc.teamcode.Subsystems.NextLights;
 import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
 import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
@@ -33,11 +32,11 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "AA RedSoloDriveRandom")
-public class RedSoloDrive extends NextFTCOpMode {
-    public RedSoloDrive() {
+@TeleOp(name = "AA TestTele")
+public class TestTele extends NextFTCOpMode {
+    public TestTele() {
         addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE, NextCamera.INSTANCE, NextLights.INSTANCE),
+                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE, NextCamera.INSTANCE),
                 new PedroComponent(PConstants::createFollower),
                 BulkReadComponent.INSTANCE,
                 BindingsComponent.INSTANCE
@@ -51,16 +50,17 @@ public class RedSoloDrive extends NextFTCOpMode {
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
-                            NextTurret.INSTANCE.faceWhileMovingCommand(
-                                    redGoalPose,
-                                    () -> follower().getPose(),
-                                    () -> follower().getVelocity().getXComponent(),
-                                    () -> follower().getVelocity().getYComponent()
+                                NextTurret.INSTANCE.faceWhileMovingCommand(
+                                        redGoalPose,
+                                        () -> follower().getPose(),
+                                        () -> follower().getVelocity().getXComponent(),
+                                        () -> follower().getVelocity().getYComponent()
 
-                            )
+                                )
                         ),
                         NextFlywheel.INSTANCE.stop(),
-                        NextLights.INSTANCE.setPurple())
+                        NextCamera.INSTANCE.startt(ActiveOpMode.hardwareMap())
+                )
         );
     }
     @Override
@@ -83,18 +83,11 @@ public class RedSoloDrive extends NextFTCOpMode {
                 NextFlywheel.INSTANCE.foreverRun()
         );
 
-        doTheCalculations.schedule();
+        //doTheCalculations.schedule();
 
         Command shootCommand = new SequentialGroup(
-//                new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                new InstantCommand(() -> {
-                    if (gDist > 110) {
-                        intakePower = passIn * 0.95;
-                    } else {
-                        intakePower = passIn;
-                    }
-
-                }),
+                new WaitUntil(NextFlywheel.INSTANCE::isReady),
+                new InstantCommand(() -> intakePower = passIn),
                 new InstantCommand(() -> gatePos = gateAllow)
         );
 
@@ -120,7 +113,7 @@ public class RedSoloDrive extends NextFTCOpMode {
         Gamepads.gamepad1().dpadDown()
                 .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
         Gamepads.gamepad1().y()
-                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(-62,-62,0))));
+                .whenBecomesTrue(new InstantCommand(() -> follower().setPose(new Pose(0,0,0))));
 
     }
 

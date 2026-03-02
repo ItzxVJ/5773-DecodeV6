@@ -1,108 +1,108 @@
-package org.firstinspires.ftc.teamcode.zTrash;
-
-import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.zTrash.BasicRedClose12.*;
-import static dev.nextftc.extensions.pedro.PedroComponent.follower;
-
-import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
-import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
-
-
-import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
-import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
-import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
-
-
-import dev.nextftc.core.commands.CommandManager;
-import dev.nextftc.core.commands.delays.Delay;
-import dev.nextftc.core.commands.delays.WaitUntil;
-import dev.nextftc.core.commands.groups.ParallelGroup;
-import dev.nextftc.core.commands.groups.SequentialGroup;
-import dev.nextftc.core.commands.utility.InstantCommand;
-import dev.nextftc.core.components.SubsystemComponent;
-import dev.nextftc.extensions.pedro.FollowPath;
-import dev.nextftc.extensions.pedro.PedroComponent;
-import dev.nextftc.ftc.NextFTCOpMode;
-
-
-//@Autonomous(name = "RedClose12")
-public class RedClose12 extends NextFTCOpMode {
-    {
-        addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE),
-                new PedroComponent(PConstants::createFollower)
-        );
-    }
-
-    @Override
-    public void onInit() {
-        follower().setStartingPose(start);
-        CommandManager.INSTANCE.scheduleCommand(
-                new ParallelGroup(
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.stop(
-                        //new InstantCommand(() -> hoodPos = hoodClosePos)
-                        ))
-        );
-    }
-    @Override
-    public void onWaitForStart() {
-
-    }
-    @Override
-    public void onStartButtonPressed() {
-        CommandManager.INSTANCE.scheduleCommand(
-                new SequentialGroup(
-                        new InstantCommand(() -> intakePower = passIn),
-                        //NextFlywheel.INSTANCE.runClose(),
-                        new FollowPath(firstShoot(follower())),
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(firstPreIntake(follower())),
-                        new Delay(0.1),
-                        new FollowPath(firstIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
-                        new Delay(0.1),
-                        new FollowPath(secondShoot(follower())),
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(secondPreIntake(follower())),
-                        new Delay(0.1),
-                        new FollowPath(secondIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
-                        new FollowPath(thirdShoot(follower())),
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(thirdPreIntake(follower())),
-                        new Delay(0.1),
-                        new FollowPath(thirdIntake(follower())),
-                        //NextFlywheel.INSTANCE.runClose(),
-                        new FollowPath(fourthShoot(follower())),
-                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
-                        new InstantCommand(() -> gatePos = gateAllow),
-                        new Delay(3),
-                        new InstantCommand(() -> gatePos = gateBlock),
-                        NextFlywheel.INSTANCE.rest(),
-                        new FollowPath(park(follower()))
-
-
-                )
-        );
-    }
-    @Override
-    public void onUpdate() {
-    }
-    @Override
-    public void onStop() {
-
-    }
-}
+//package org.firstinspires.ftc.teamcode.zTrash;
+//
+//import static org.firstinspires.ftc.teamcode.Core.Constants.*;
+//import static org.firstinspires.ftc.teamcode.zTrash.BasicRedClose12.*;
+//import static dev.nextftc.extensions.pedro.PedroComponent.follower;
+//
+//import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
+//import org.firstinspires.ftc.teamcode.Subsystems.NextFlywheel;
+//
+//
+//import org.firstinspires.ftc.teamcode.Subsystems.NextGate;
+//import org.firstinspires.ftc.teamcode.Subsystems.NextHood;
+//import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
+//
+//
+//import dev.nextftc.core.commands.CommandManager;
+//import dev.nextftc.core.commands.delays.Delay;
+//import dev.nextftc.core.commands.delays.WaitUntil;
+//import dev.nextftc.core.commands.groups.ParallelGroup;
+//import dev.nextftc.core.commands.groups.SequentialGroup;
+//import dev.nextftc.core.commands.utility.InstantCommand;
+//import dev.nextftc.core.components.SubsystemComponent;
+//import dev.nextftc.extensions.pedro.FollowPath;
+//import dev.nextftc.extensions.pedro.PedroComponent;
+//import dev.nextftc.ftc.NextFTCOpMode;
+//
+//
+////@Autonomous(name = "RedClose12")
+//public class RedClose12 extends NextFTCOpMode {
+//    {
+//        addComponents(
+//                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE),
+//                new PedroComponent(PConstants::createFollower)
+//        );
+//    }
+//
+//    @Override
+//    public void onInit() {
+//        follower().setStartingPose(start);
+//        CommandManager.INSTANCE.scheduleCommand(
+//                new ParallelGroup(
+//                        new InstantCommand(() -> gatePos = gateBlock),
+//                        NextFlywheel.INSTANCE.stop(
+//                        //new InstantCommand(() -> hoodPos = hoodClosePos)
+//                        ))
+//        );
+//    }
+//    @Override
+//    public void onWaitForStart() {
+//
+//    }
+//    @Override
+//    public void onStartButtonPressed() {
+//        CommandManager.INSTANCE.scheduleCommand(
+//                new SequentialGroup(
+//                        new InstantCommand(() -> intakePower = passIn),
+//                        //NextFlywheel.INSTANCE.runClose(),
+//                        new FollowPath(firstShoot(follower())),
+//                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+//                        new InstantCommand(() -> gatePos = gateAllow),
+//                        new Delay(3),
+//                        new InstantCommand(() -> gatePos = gateBlock),
+//                        NextFlywheel.INSTANCE.rest(),
+//                        new FollowPath(firstPreIntake(follower())),
+//                        new Delay(0.1),
+//                        new FollowPath(firstIntake(follower())),
+//                        //NextFlywheel.INSTANCE.runClose(),
+//                        new Delay(0.1),
+//                        new FollowPath(secondShoot(follower())),
+//                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+//                        new InstantCommand(() -> gatePos = gateAllow),
+//                        new Delay(3),
+//                        new InstantCommand(() -> gatePos = gateBlock),
+//                        NextFlywheel.INSTANCE.rest(),
+//                        new FollowPath(secondPreIntake(follower())),
+//                        new Delay(0.1),
+//                        new FollowPath(secondIntake(follower())),
+//                        //NextFlywheel.INSTANCE.runClose(),
+//                        new FollowPath(thirdShoot(follower())),
+//                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+//                        new InstantCommand(() -> gatePos = gateAllow),
+//                        new Delay(3),
+//                        new InstantCommand(() -> gatePos = gateBlock),
+//                        NextFlywheel.INSTANCE.rest(),
+//                        new FollowPath(thirdPreIntake(follower())),
+//                        new Delay(0.1),
+//                        new FollowPath(thirdIntake(follower())),
+//                        //NextFlywheel.INSTANCE.runClose(),
+//                        new FollowPath(fourthShoot(follower())),
+//                        new WaitUntil(NextFlywheel.INSTANCE::isReady),
+//                        new InstantCommand(() -> gatePos = gateAllow),
+//                        new Delay(3),
+//                        new InstantCommand(() -> gatePos = gateBlock),
+//                        NextFlywheel.INSTANCE.rest(),
+//                        new FollowPath(park(follower()))
+//
+//
+//                )
+//        );
+//    }
+//    @Override
+//    public void onUpdate() {
+//    }
+//    @Override
+//    public void onStop() {
+//
+//    }
+//}

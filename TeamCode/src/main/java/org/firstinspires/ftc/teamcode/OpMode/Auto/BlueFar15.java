@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpMode.Auto;
 
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
-import static org.firstinspires.ftc.teamcode.Core.Paths.RedFar15.*;
+import static org.firstinspires.ftc.teamcode.Core.Paths.BlueFar15.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -27,8 +27,8 @@ import dev.nextftc.ftc.ActiveOpMode;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@Autonomous(name = "RedFar15")
-public class RedFar15 extends NextFTCOpMode {
+@Autonomous(name = "BlueFar15")
+public class BlueFar15 extends NextFTCOpMode {
 
     {
         addComponents(
@@ -53,14 +53,14 @@ public class RedFar15 extends NextFTCOpMode {
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
                                 NextTurret.INSTANCE.faceWhileMovingCommand(
-                                        redGoalPose,
+                                        blueGoalPose,
                                         () -> follower().getPose(),
                                         () -> follower().getVelocity().getXComponent(),
                                         () -> follower().getVelocity().getYComponent()
 
                                 )
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(blueGoalPose, () -> follower().getPose()),
                         NextFlywheel.INSTANCE.stop()
                 )
         );
@@ -201,7 +201,7 @@ public class RedFar15 extends NextFTCOpMode {
 
     Command doTheCalculations = new ParallelGroup(
             NextFlywheel.INSTANCE.calculations(
-                    redGoalPose,
+                    blueGoalPose,
                     () -> follower().getPose(),
                     () -> follower().getVelocity().getXComponent(),
                     () -> follower().getVelocity().getYComponent()),

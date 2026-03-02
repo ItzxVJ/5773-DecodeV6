@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.OpMode.Tests.NextTests;
 import static org.firstinspires.ftc.teamcode.Core.Constants.*;
 import static dev.nextftc.extensions.pedro.PedroComponent.follower;
 
-
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.PedroPathing.PConstants;
@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.Subsystems.NextPass;
 import org.firstinspires.ftc.teamcode.Subsystems.NextTurret;
 
 import dev.nextftc.bindings.BindingManager;
-
 import dev.nextftc.core.commands.Command;
 import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.commands.delays.WaitUntil;
@@ -30,42 +29,75 @@ import dev.nextftc.ftc.Gamepads;
 import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 
-@TeleOp(name = "Ishaan Ashok")
+@TeleOp(name = "Flywheel Calibration")
 public class SoloFlywheelTest extends NextFTCOpMode {
+
+    /* =======================
+       Calibration Constants
+       ======================= */
+    private static final double RPM_STEP = 10;
+    private static final double MIN_RPM = 0;
+    private static final double MAX_RPM = 6000; // adjust if needed
+
+    private static final double HOOD_STEP = 0.02;
+    private static final double MIN_HOOD = 0.0;
+    private static final double MAX_HOOD = 1.0;
+
     public SoloFlywheelTest() {
         addComponents(
-                new SubsystemComponent(NextFlywheel.INSTANCE, NextGate.INSTANCE, NextHood.INSTANCE, NextPass.INSTANCE, NextTurret.INSTANCE),
+                new SubsystemComponent(
+                        NextFlywheel.INSTANCE,
+                        NextGate.INSTANCE,
+                        NextHood.INSTANCE,
+                        NextPass.INSTANCE,
+                        NextTurret.INSTANCE
+                ),
                 new PedroComponent(PConstants::createFollower),
                 BulkReadComponent.INSTANCE,
                 BindingsComponent.INSTANCE
         );
     }
+
     @Override
     public void onInit() {
-        follower().setStartingPose(lastPose);
+        follower().setStartingPose(new Pose(0, 0, 0));
+
         CommandManager.INSTANCE.scheduleCommand(
                 new ParallelGroup(
                         new InstantCommand(() -> gatePos = gateBlock),
                         new SequentialGroup(
                                 NextTurret.INSTANCE.resetTurret(),
-                                NextTurret.INSTANCE.faceCommand(redGoalPose, () -> follower().getPose())
+                                NextTurret.INSTANCE.faceCommand(
+                                        redGoalPose,
+                                        () -> follower().getPose()
+                                )
                         ),
-                        NextFlywheel.INSTANCE.updateDistanceRPM(redGoalPose, () -> follower().getPose()),
+                        NextFlywheel.INSTANCE.updateDistanceRPM(
+                                redGoalPose,
+                                () -> follower().getPose()
+                        ),
                         NextFlywheel.INSTANCE.stop()
                 )
         );
     }
+
     @Override
     public void onStartButtonPressed() {
+
+        /* =======================
+           Driver Controlled
+           ======================= */
         Command driverControlled = new PedroDriverControlled(
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_y / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().left_stick_x / 1.5,
-                () -> (double) -ActiveOpMode.gamepad1().right_stick_x / 3,
+                () -> -ActiveOpMode.gamepad1().left_stick_y / 1.5,
+                () -> -ActiveOpMode.gamepad1().left_stick_x / 1.5,
+                () -> -ActiveOpMode.gamepad1().right_stick_x / 3.0,
                 true
         );
-
         driverControlled.schedule();
 
+        /* =======================
+           Shooting Logic
+           ======================= */
         Gamepads.gamepad1().rightTrigger()
                 .atLeast(0.2)
                 .whenBecomesTrue(
@@ -83,40 +115,78 @@ public class SoloFlywheelTest extends NextFTCOpMode {
                         )
                 );
 
-        Gamepads.gamepad1().leftTrigger()
-                .atLeast(0.2)
-                .whenBecomesTrue(
-                        NextFlywheel.INSTANCE.farRev()
-                );
-
+        /* =======================
+           Intake Control
+           ======================= */
         Gamepads.gamepad1().rightBumper()
                 .whenTrue(new InstantCommand(() -> intakePower = passIn))
                 .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+
         Gamepads.gamepad1().leftBumper()
                 .whenTrue(new InstantCommand(() -> intakePower = passOut))
                 .whenBecomesFalse(new InstantCommand(() -> intakePower = passRest));
+
+        /* =======================
+           Turret Manual Adjust
+           ======================= */
         Gamepads.gamepad1().dpadRight()
                 .whenBecomesTrue(NextTurret.INSTANCE.addYaw());
+
         Gamepads.gamepad1().dpadLeft()
                 .whenBecomesTrue(NextTurret.INSTANCE.decreaseYaw());
-        Gamepads.gamepad1().dpadDown()
-                .whenBecomesTrue(NextTurret.INSTANCE.resetYaw());
-        Gamepads.gamepad1().x()
-                .whenBecomesTrue(NextFlywheel.INSTANCE.rest());
 
+        /* =======================
+           RPM Calibration
+           ======================= */
+        Gamepads.gamepad1().dpadUp()
+                .whenBecomesTrue(
+                        new InstantCommand(() ->
+                                wanted = Math.min(wanted + RPM_STEP, MAX_RPM)
+                        )
+                );
+
+        Gamepads.gamepad1().dpadDown()
+                .whenBecomesTrue(
+                        new InstantCommand(() ->
+                                wanted = Math.max(wanted - RPM_STEP, MIN_RPM)
+                        )
+                );
+
+        /* =======================
+           Hood Calibration
+           ======================= */
+        Gamepads.gamepad1().y()
+                .whenBecomesTrue(
+                        new InstantCommand(() ->
+                                hoodPos = Math.min(hoodPos + HOOD_STEP, MAX_HOOD)
+                        )
+                );
+
+        Gamepads.gamepad1().x()
+                .whenBecomesTrue(
+                        new InstantCommand(() ->
+                                hoodPos = Math.max(hoodPos - HOOD_STEP, MIN_HOOD)
+                        )
+                );
+        Gamepads.gamepad1().b()
+                .whenBecomesTrue(
+                        new InstantCommand(() ->
+                                commandedRPM = 400
+                        )
+                );
     }
 
     @Override
     public void onUpdate() {
         BindingManager.update();
         follower().update();
+
         ActiveOpMode.telemetry().addData("Distance", gDist);
         ActiveOpMode.telemetry().addData("Hood Angle", hoodPos);
-        ActiveOpMode.telemetry().addData("Commanded RPM", commandedRPM);
+        ActiveOpMode.telemetry().addData("Commanded RPM", wanted);
         ActiveOpMode.telemetry().addData("Turret Offset", yawOffset);
         ActiveOpMode.telemetry().addLine("good luck gang don't get cooked");
         ActiveOpMode.telemetry().update();
-
     }
 
     @Override

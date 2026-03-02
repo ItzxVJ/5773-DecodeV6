@@ -18,6 +18,7 @@ public class NextPass implements Subsystem {
 
     @Override
     public void periodic() {
-        pass.setPower(intakePower);
+            pass.setPower(intakePower);
+
     }
 }

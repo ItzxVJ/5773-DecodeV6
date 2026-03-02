@@ -29,11 +29,12 @@ public class NextFlywheel implements Subsystem {
     private MotorEx shootL, shootR;
 
     public static double threshold = 30;
-
     public static boolean stop;
 
     private double cachedVoltage = 12.0;
     private double lastVoltageTime = 0;
+    private double lastCommandedRPM = 0;
+
     FlywheelLUT.ShotData shot;
 
     @Override
@@ -41,19 +42,13 @@ public class NextFlywheel implements Subsystem {
         controller = new FlywheelPIDFControl(ActiveOpMode.hardwareMap());
         shootL = new MotorEx("leftFly");
         shootR = new MotorEx("rightFly").reversed();
+
+        // PIDF setup only once
+        controller.setPIDF(fskS, fskV, fskP, fskI, fskD);
     }
 
     @Override
     public void periodic() {
-
-        if (gDist >= 110) {
-            controller.setPIDF(fskS, fskV, fskP, fskI, fskD);
-        }
-
-        if (gDist < 110) {
-            controller.setPIDF(cskS, cskV, cskP, cskI, cskD);
-        }
-
         currentRPM = Math.abs(shootR.getVelocity());
 
         double now = System.nanoTime() / 1e9;
@@ -62,8 +57,19 @@ public class NextFlywheel implements Subsystem {
             lastVoltageTime = now;
         }
 
-        double power = controller.update(commandedRPM, currentRPM, cachedVoltage);
         shot = lookup.getShotData(gDist);
+
+        double targetRPM = shot.rpm;
+
+        double maxDeltaRPM = 120;
+        commandedRPM = MathFunctions.clamp(
+                targetRPM,
+                lastCommandedRPM - maxDeltaRPM,
+                lastCommandedRPM + maxDeltaRPM
+        );
+        lastCommandedRPM = commandedRPM;
+
+        double power = controller.update(commandedRPM, currentRPM, cachedVoltage);
 
         if (stop) {
             shootL.setPower(0);
@@ -79,52 +85,6 @@ public class NextFlywheel implements Subsystem {
                 target.getX() - robot.getX(),
                 target.getY() - robot.getY()
         );
-    }
-
-    public static double flywheelSpeed(double dist) {
-        return MathFunctions.clamp(
-                -0.0000448751 * Math.pow(dist, 4)
-                        + 0.0173673 * Math.pow(dist, 3)
-                        - 2.40241 * Math.pow(dist, 2)
-                        + 146.22618 * dist
-                        - 2355.79014,
-                700, 1700
-        );
-    }
-
-    public Command calcRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
-        return new InstantCommand(() -> {
-            gDist = distanceTo(target, robotPoseSupplier.get());
-            computedRPM = flywheelSpeed(gDist);
-        });
-    }
-
-    public Command updateDistanceRPM(Pose target, Supplier<Pose> robotPoseSupplier) { 
-        return new LambdaCommand()
-                .setUpdate(() -> {
-                    gDist = distanceTo(target, robotPoseSupplier.get());
-                    computedRPM = shot.rpm;
-                })
-                .setIsDone(() -> false);
-    }
-
-    public Command run() {
-        return new LambdaCommand()
-                .setStart(() -> stop = false);
-    }
-
-    public Command testing() {
-        return new InstantCommand(() -> {
-            commandedRPM = wanted;
-            stop = false;
-        });
-    }
-
-    public Command instantRun() {
-        return new InstantCommand(() -> {
-            commandedRPM = computedRPM;
-            stop = false;
-        });
     }
     public Command calculations(
             Pose target,
@@ -146,33 +106,28 @@ public class NextFlywheel implements Subsystem {
                     );
 
                     shot = lookup.getShotData(gDist);
-                    computedRPM = shot.rpm;
                 })
+                .setIsDone(() -> false);
+    }
+
+    public Command updateDistanceRPM(Pose target, Supplier<Pose> robotPoseSupplier) {
+        return new LambdaCommand()
+                .setUpdate(() -> gDist = distanceTo(target, robotPoseSupplier.get()))
                 .setIsDone(() -> false);
     }
 
     public Command foreverRun() {
         return new LambdaCommand()
-                .setUpdate(() -> { commandedRPM = computedRPM; stop = false; })
+                .setUpdate(() -> stop = false)
                 .setIsDone(() -> false);
     }
 
     public Command rest() {
-        return new InstantCommand(() -> {
-            commandedRPM = restRPM;
-            stop = false;
-        });
+        return new InstantCommand(() -> stop = false);
     }
 
     public Command stop() {
         return new InstantCommand(() -> stop = true);
-    }
-
-    public Command farRev() {
-        return new InstantCommand(() -> {
-            commandedRPM = 1800;
-            stop = false;
-        });
     }
 
     public boolean isReady() {
@@ -182,10 +137,17 @@ public class NextFlywheel implements Subsystem {
 
     private double getBatteryVoltage() {
         double minVoltage = 14.0;
-        for (VoltageSensor sensor :
-                ActiveOpMode.hardwareMap().getAll(VoltageSensor.class)) {
+        for (VoltageSensor sensor : ActiveOpMode.hardwareMap().getAll(VoltageSensor.class)) {
             minVoltage = Math.min(minVoltage, sensor.getVoltage());
         }
+
         return minVoltage;
+    }
+
+    public Command testing() {
+        return new InstantCommand(() -> {
+            commandedRPM = wanted;
+            stop = false;
+        });
     }
 }

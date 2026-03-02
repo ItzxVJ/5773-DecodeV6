@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class FlywheelLUT {
+    public static double distanceOffset = 7;
 
     public static class ShotData {
         public double distance; // inches
@@ -21,13 +22,23 @@ public class FlywheelLUT {
     private final List<ShotData> table = new ArrayList<>();
 
     public FlywheelLUT() {
-        table.add(new ShotData(53.5, 925, 0.45));
-        table.add(new ShotData(68.9, 975, 0.3));
-        table.add(new ShotData(84, 1075, 0.2));
-        table.add(new ShotData(100.5, 1140, 0.15));
-        table.add(new ShotData(115.68, 1225, 0.1));
-        table.add(new ShotData(132.8, 1330, 0.05));
-        table.add(new ShotData(147, 1540, 0));
+        table.add(new ShotData(52 - distanceOffset, 960, 0.42));
+        table.add(new ShotData(61 - distanceOffset, 1020, 0.38));
+        table.add(new ShotData(73 - distanceOffset, 1070, 0.28));
+        table.add(new ShotData(86 - distanceOffset, 1130, 0.2));
+        table.add(new ShotData(100 - distanceOffset, 1210, 0.16));
+        table.add(new ShotData(115 - distanceOffset, 1280, 0.14));
+        table.add(new ShotData(133 - distanceOffset, 1350, 0.12));
+        table.add(new ShotData(152 - distanceOffset, 1460, 0.08));
+        table.add(new ShotData(166 - distanceOffset, 1530, 0.08));
+
+//        table.add(new ShotData(49,910,0.42));
+//        table.add(new ShotData(61,980,0.36));
+//        table.add(new ShotData(77,1030,0.32));
+//        table.add(new ShotData(91,1150,0.24));
+//        table.add(new ShotData(116,1280,0.16));
+//        table.add(new ShotData(135,1520,0.12));
+//        table.add(new ShotData(154,1640,0.12));
     }
 
     public ShotData getShotData(double distance) {

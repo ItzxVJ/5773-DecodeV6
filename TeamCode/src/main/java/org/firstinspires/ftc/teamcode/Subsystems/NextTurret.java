@@ -24,7 +24,7 @@ public class NextTurret implements Subsystem {
 
     private final MotorEx turret = new MotorEx("turret", -1);
 
-    public static double rpt = 0.00366985;
+    public static double rpt = 0.00364031593695225;
 
     public static double lowLimit  = -750;
     public static double highLimit =  750;
@@ -41,12 +41,15 @@ public class NextTurret implements Subsystem {
     public static double toleranceTicks = 2;
 
     public static double targetAlpha = 0.25;
-
-    private double targetTicks = 0.0;
-    private double filteredTargetTicks = 0.0;
+    public static double targetTicks = 0.0;
+    public static double filteredTargetTicks = 0.0;
 
     private double lastError = 0.0;
     private double lastTime = 0.0;
+    public static double currentTicks;
+
+    public static double TURRET_X_OFFSET = -2.15; // inches
+    public static double TURRET_Y_OFFSET = 0.0;
 
     private final ElapsedTime timer = new ElapsedTime();
 
@@ -71,7 +74,7 @@ public class NextTurret implements Subsystem {
 
         targetTicks = clamp(targetTicks, lowLimit, highLimit);
 
-        double currentTicks = turret.getCurrentPosition();
+        currentTicks = turret.getCurrentPosition();
         double rawError = targetTicks - currentTicks;
 
         if (Math.abs(rawError) < 30) {
@@ -126,9 +129,11 @@ public class NextTurret implements Subsystem {
     }
 
     public void face(Pose target, Pose robot) {
+        Pose turretPose = getTurretPose(robot);
+
         double angleToTarget = Math.atan2(
-                target.getY() - robot.getY(),
-                target.getX() - robot.getX()
+                target.getY() - turretPose.getY(),
+                target.getX() - turretPose.getX()
         );
 
         setYaw(angleToTarget - robot.getHeading());
@@ -145,6 +150,15 @@ public class NextTurret implements Subsystem {
             turret.getMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             targetTicks = 0.0;
+            filteredTargetTicks = 0.0;
+            lastError = 0.0;
+        });
+    }
+
+    public Command resetTheTurret() {
+        return new InstantCommand(() -> {
+            turret.getMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            targetTicks = currentTicks;
             filteredTargetTicks = 0.0;
             lastError = 0.0;
         });
@@ -168,7 +182,7 @@ public class NextTurret implements Subsystem {
     public void faceWhileMoving(
             Pose goal,
             Pose robot,
-            double vx,   // field-centric inches/sec
+            double vx,
             double vy
     ) {
 
@@ -177,9 +191,13 @@ public class NextTurret implements Subsystem {
         double futureX = robot.getX() + vx * tFlight;
         double futureY = robot.getY() + vy * tFlight;
 
+        Pose futureRobot = new Pose(futureX, futureY, robot.getHeading());
+
+        Pose turretFuture = getTurretPose(futureRobot);
+
         double angle = Math.atan2(
-                goal.getY() - futureY,
-                goal.getX() - futureX
+                goal.getY() - turretFuture.getY(),
+                goal.getX() - turretFuture.getX()
         );
 
         setYaw(angle - robot.getHeading());
@@ -198,5 +216,20 @@ public class NextTurret implements Subsystem {
                         vy.get()
                 ))
                 .setIsDone(() -> false);
+    }
+
+    private Pose getTurretPose(Pose robot) {
+        double cos = Math.cos(robot.getHeading());
+        double sin = Math.sin(robot.getHeading());
+
+        double tx = robot.getX()
+                + TURRET_X_OFFSET * cos
+                - TURRET_Y_OFFSET * sin;
+
+        double ty = robot.getY()
+                + TURRET_X_OFFSET * sin
+                + TURRET_Y_OFFSET * cos;
+
+        return new Pose(tx, ty, robot.getHeading());
     }
 }
